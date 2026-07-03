@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volleyball Training Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <div class="header-top">
+      <h1 class="app-title"><span class="ball">🏐</span> Volleyball Training Attendance</h1>
+      <div class="datetime">
+        <span id="currentDate" class="current-date"></span>
+        <span id="currentTime" class="current-time"></span>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-item">
+        <span class="stat-value" id="statTotal">0</span>
+        <span class="stat-label">Total Players</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item stat-present">
+        <span class="stat-value" id="statPresent">0</span>
+        <span class="stat-label">Present</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item stat-absent">
+        <span class="stat-value" id="statAbsent">0</span>
+        <span class="stat-label">Absent</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ HISTORY / READ-ONLY BANNER ============ -->
+  <div id="historyBanner" class="history-banner hidden">
+    <span id="historyBannerText"></span>
+    <button id="backToTodayBtn" class="btn-link">Back to today →</button>
+  </div>
+
+  <!-- ============ CONTROLS (hidden in report mode) ============ -->
+  <section id="controlsSection" class="controls">
+
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="search" id="searchInput" placeholder="Search by student name..." aria-label="Search by student name">
+      </div>
+
+      <div class="date-wrap">
+        <label for="dateSelect" class="date-label">Viewing</label>
+        <input type="date" id="dateSelect" aria-label="Select attendance date">
+      </div>
+
+      <button id="reportModeBtn" class="btn-primary" type="button">📊 Report Mode</button>
+    </div>
+
+    <div class="controls-row filters-row">
+      <select id="genderFilter" aria-label="Filter by gender">
+        <option value="all">All Genders</option>
+        <option value="Boy">Boys</option>
+        <option value="Girl">Girls</option>
+      </select>
+
+      <select id="gradeFilter" aria-label="Filter by grade">
+        <option value="all">All Grades</option>
+      </select>
+
+      <select id="sectionFilter" aria-label="Filter by section">
+        <option value="all">All Sections</option>
+      </select>
+
+      <select id="sortSelect" aria-label="Sort players">
+        <option value="name-asc">Name A–Z</option>
+        <option value="name-desc">Name Z–A</option>
+        <option value="grade">Grade</option>
+        <option value="section">Section</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- ============ STUDENT GRID ============ -->
+  <main id="mainView">
+    <div id="studentGrid" class="student-grid"></div>
+    <p id="emptyState" class="empty-state hidden">No players match your search or filters.</p>
+  </main>
+
+  <!-- ============ REPORT MODE ============ -->
+  <section id="reportView" class="report-view hidden">
+    <div class="report-card">
+      <div class="report-header">
+        <h2 class="report-title"><span class="ball">🏐</span> Attendance Report</h2>
+        <div class="report-meta">
+          <span id="reportDate"></span>
+          <span class="report-meta-dot">•</span>
+          <span id="reportTime"></span>
+        </div>
+      </div>
+
+      <div class="report-totals" id="reportTotals">
+        <div class="report-total-box">
+          <span class="report-total-value" id="reportTotalAll">0</span>
+          <span class="report-total-label">Total Players</span>
+        </div>
+        <div class="report-total-box report-total-present">
+          <span class="report-total-value" id="reportTotalPresent">0</span>
+          <span class="report-total-label">Present</span>
+        </div>
+        <div class="report-total-box report-total-absent">
+          <span class="report-total-value" id="reportTotalAbsent">0</span>
+          <span class="report-total-label">Absent</span>
+        </div>
+      </div>
+
+      <div class="report-groups">
+        <div class="report-group">
+          <h3 class="report-group-title">Girls Attendance <span id="reportGirlsCount" class="report-group-count"></span></h3>
+          <div id="reportGirlsList" class="report-list"></div>
+        </div>
+        <div class="report-group">
+          <h3 class="report-group-title">Boys Attendance <span id="reportBoysCount" class="report-group-count"></span></h3>
+          <div id="reportBoysList" class="report-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="exitReportBtn" class="btn-secondary btn-exit-report" type="button">Exit Report Mode</button>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
