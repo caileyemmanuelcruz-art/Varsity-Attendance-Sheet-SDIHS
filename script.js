@@ -404,10 +404,10 @@ function isViewingToday() {
   return state.viewingDateKey === todayKey();
 }
 
-// Whether attendance can currently be edited: today is always editable
-// unless someone locks it further; past days need the coach unlock.
+// Whether attendance can currently be edited. The lock applies to every
+// date, including today — nothing is editable until the coach unlocks it.
 function canEdit() {
-  return isViewingToday() || state.unlocked;
+  return state.unlocked;
 }
 
 // Recompute totals for the CURRENTLY FILTERED set of players and paint
@@ -438,16 +438,24 @@ function buildFilterSummaryText(count) {
   return `Showing ${count} player${count === 1 ? "" : "s"} — ${parts.join(" · ")}`;
 }
 
-// Show/hide the "viewing a past date" banner and reflect lock status.
+// Show/hide the banner explaining why the sheet can't be edited right now.
 function updateHistoryBanner() {
   if (isViewingToday()) {
-    dom.historyBanner.classList.add("hidden");
+    if (state.unlocked) {
+      dom.historyBanner.classList.add("hidden");
+    } else {
+      dom.historyBannerText.textContent =
+        "This attendance sheet is locked. Unlock with the coach password to mark players present.";
+      dom.backToTodayBtn.classList.add("hidden");
+      dom.historyBanner.classList.remove("hidden");
+    }
     return;
   }
   const niceDate = formatDateLong(new Date(state.viewingDateKey + "T00:00:00"));
   dom.historyBannerText.textContent = state.unlocked
     ? `Viewing ${niceDate} — unlocked for editing (coach mode).`
     : `Viewing ${niceDate} — this attendance sheet is read-only. Unlock to edit.`;
+  dom.backToTodayBtn.classList.remove("hidden");
   dom.historyBanner.classList.remove("hidden");
 }
 
