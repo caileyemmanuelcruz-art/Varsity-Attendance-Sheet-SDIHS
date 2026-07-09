@@ -93,6 +93,16 @@ const ROSTER = [
 const COACH_PASSWORD = "spike7";
 
 /* ==========================================================================
+   2b. HIDDEN TIMESTAMP EDITOR — separate password, separate access path.
+   This is intentionally not wired to any visible button or menu. It's
+   reached only by a specific repeated-click gesture (see section 15,
+   "SECRET TIMESTAMP EDITOR"), and gated by its own password, independent
+   of COACH_PASSWORD above and independent of the lock/unlock state.
+   ========================================================================== */
+
+const TIME_EDIT_PASSWORD = "spike67";
+
+/* ==========================================================================
    3. STORAGE HELPERS (Supabase-backed)
    All attendance now lives in the "attendance" table in Supabase, one row
    per player per date:
@@ -1130,6 +1140,123 @@ function refreshAll() {
   }
 }
 
+/* ==========================================================================
+   14b. SECRET TIMESTAMP EDITOR
+   Hidden on purpose: there is no visible button or menu entry anywhere in
+   the UI for this. It's reached only by clicking the volleyball emoji next
+   to the page title 7 times in a row (within ~2 seconds), and it asks for
+   its OWN password (TIME_EDIT_PASSWORD, defined in section 2b) — separate
+   from the coach lock password and independent of whether the app is
+   currently locked or unlocked. Use it to correct the recorded time for a
+   player's attendance on any date, past or present.
+   ========================================================================== */
+
+let secretClickCount = 0;
+let secretClickResetTimer = null;
+const SECRET_CLICKS_REQUIRED = 7;
+const SECRET_CLICK_WINDOW_MS = 2000;
+
+function bindSecretTimeEditorTrigger() {
+  const trigger = document.querySelector("#page-volleyball .app-title .ball");
+  if (!trigger) return;
+  trigger.addEventListener("click", handleSecretTriggerClick);
+}
+
+function handleSecretTriggerClick() {
+  secretClickCount += 1;
+  clearTimeout(secretClickResetTimer);
+  secretClickResetTimer = setTimeout(() => {
+    secretClickCount = 0;
+  }, SECRET_CLICK_WINDOW_MS);
+
+  if (secretClickCount >= SECRET_CLICKS_REQUIRED) {
+    secretClickCount = 0;
+    clearTimeout(secretClickResetTimer);
+    openSecretTimeEditor();
+  }
+}
+
+function openSecretTimeEditor() {
+  const code = window.prompt("Access code:");
+  if (code === null) return; // cancelled
+  if (code !== TIME_EDIT_PASSWORD) {
+    window.alert("Incorrect code.");
+    return;
+  }
+  promptEditAttendanceTime();
+}
+
+// "8:45 AM" or "8:45:30 AM" -> canonical "8:45:00 AM" / "8:45:30 AM" to
+// match the format already used everywhere else in the app.
+function normalizeTimeInput(input) {
+  const match = String(input).trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)$/);
+  if (!match) return null;
+
+  const hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const second = match[3] ? parseInt(match[3], 10) : 0;
+  const meridiem = match[4].toUpperCase();
+
+  if (hour < 1 || hour > 12 || minute > 59 || second > 59) return null;
+
+  return `${hour}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")} ${meridiem}`;
+}
+
+async function promptEditAttendanceTime() {
+  const dateInput = window.prompt("Date to edit (YYYY-MM-DD):", state.viewingDateKey);
+  if (dateInput === null) return;
+  const dateKey = dateInput.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    window.alert("That doesn't look like a valid date — use YYYY-MM-DD.");
+    return;
+  }
+
+  const nameInput = window.prompt("Player name (or part of it):");
+  if (nameInput === null) return;
+  const term = nameInput.trim().toLowerCase();
+  if (!term) return;
+
+  const matches = ROSTER.filter((p) => p.name.toLowerCase().includes(term));
+  if (matches.length === 0) {
+    window.alert("No player matches that name.");
+    return;
+  }
+
+  let player = matches[0];
+  if (matches.length > 1) {
+    const list = matches.map((p, i) => `${i + 1}. ${p.name}`).join("\n");
+    const pick = window.prompt(`Multiple matches — enter a number:\n${list}`);
+    const idx = parseInt(pick, 10) - 1;
+    if (!matches[idx]) {
+      window.alert("No valid selection made.");
+      return;
+    }
+    player = matches[idx];
+  }
+
+  const record = getRecordForDate(dateKey);
+  const entry = record[player.id];
+  const currentlyPresent = !!(entry && entry.present);
+  const currentTimestamp = currentlyPresent ? entry.timestamp : null;
+
+  const promptLabel = currentTimestamp
+    ? `New time for ${player.name} on ${dateKey} (currently ${currentTimestamp}):\nFormat: h:mm AM/PM, e.g. 8:45 AM`
+    : `${player.name} isn't currently marked present on ${dateKey}.\nEnter a time to mark them present at that time, or cancel:\nFormat: h:mm AM/PM, e.g. 8:45 AM`;
+
+  const timeInput = window.prompt(promptLabel, currentTimestamp || "");
+  if (timeInput === null) return;
+
+  const normalized = normalizeTimeInput(timeInput);
+  if (!normalized) {
+    window.alert("Couldn't understand that time — use a format like 8:45 AM.");
+    return;
+  }
+
+  await setPlayerAttendance(dateKey, player.id, true, normalized);
+  refreshAll();
+  window.alert(`Updated: ${player.name} — ${dateKey} — ${normalized}`);
+}
+
 function bindEvents() {
   document.querySelector(".main-nav").addEventListener("click", onNavClick);
 
@@ -1152,6 +1279,8 @@ function bindEvents() {
   dom.piGenderFilter.addEventListener("change", onPiGenderFilterChange);
   dom.piGradeFilter.addEventListener("change", onPiGradeFilterChange);
   dom.piSectionFilter.addEventListener("change", onPiSectionFilterChange);
+
+  bindSecretTimeEditorTrigger();
 }
 
 async function init() {
