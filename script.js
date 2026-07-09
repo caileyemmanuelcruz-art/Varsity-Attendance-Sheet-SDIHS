@@ -1,1039 +1,998 @@
-
-
 /* ==========================================================================
-   VOLLEYBALL TRAINING ATTENDANCE — STYLESHEET
-   Design tokens: navy court blue + volleyball gold, scoreboard accents.
+   TRAINING ATTENDANCE — SCRIPT
+   Sections:
+     1. Player database (Volleyball roster)
+     2. Coach password / lock settings
+     3. Storage helpers (Supabase-backed, per-day attendance, realtime sync)
+     4. Date / time helpers
+     5. Application state
+     6. DOM references
+     7. Navigation between sport pages
+     8. Rendering (cards, stats, report mode)
+     9. Filtering / sorting (incl. grade -> section cascade)
+    10. Season-long per-player counters
+    11. Coach lock / unlock
+    12. Player Information tab
+    13. Event handlers
+    14. Init
    ========================================================================== */
 
-:root {
-  /* --- Color tokens --- */
-  --navy: #0F2A47;
-  --navy-light: #173A5E;
-  --navy-lighter: #21496F;
-  --blue: #1E56A0;
-  --blue-light: #EAF1FB;
-  --gold: #F2B705;
-  --gold-dark: #C99A04;
-  --gold-soft: #FDF3D4;
-  --bg: #F5F6F8;
-  --card-bg: #FFFFFF;
-  --ink: #16233A;
-  --ink-soft: #4B5D75;
-  --gray: #718096;
-  --gray-light: #E3E7ED;
-  --success: #1C7C3C;
-  --success-bg: #E5F5EA;
-  --danger: #C23B3B;
-  --danger-bg: #FBEAEA;
-
-  /* --- Type --- */
-  --font-display: 'Barlow Condensed', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* --- Shape / shadow --- */
-  --radius-lg: 18px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
-  --shadow-card: 0 1px 2px rgba(15, 42, 71, 0.06), 0 6px 16px rgba(15, 42, 71, 0.08);
-  --shadow-header: 0 8px 24px rgba(15, 42, 71, 0.18);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-#app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 0 48px;
-}
-
 /* ==========================================================================
-   MAIN NAVIGATION — sport tabs + player information
+   1. PLAYER DATABASE
+   Embedded roster. Each player has a stable id so attendance records can
+   reference them regardless of name changes, sort order, etc.
+   Birthday is stored as "MM/DD/YYYY" or null when not on file.
    ========================================================================== */
 
-.main-nav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--navy);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  flex-wrap: wrap;
-}
+const ROSTER = [
+  // ---- Boys ----
+  { id: "b01", name: "Adriano, Jeremy John Behmen D.", gender: "Boy", grade: 7, section: "Magsaysay", birthday: "03/06/2012" },
+  { id: "b02", name: "Agustin, Carlo Hernandez", gender: "Boy", grade: 11, section: "Yakal", birthday: "11/16/2009" },
+  { id: "b03", name: "Alamida, Rhaylee Klaine P.", gender: "Boy", grade: 7, section: "Magsaysay", birthday: "01/16/2012" },
+  { id: "b04", name: "Balagso, Francis C.", gender: "Boy", grade: 10, section: "Pulag", birthday: "06/10/2011" },
+  { id: "b05", name: "Baring, Arnel", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "08/15/2012" },
+  { id: "b06", name: "Borlaza, Gabriel Lenard S.", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "03/01/2012" },
+  { id: "b07", name: "Braganca, Bruce Rola", gender: "Boy", grade: 8, section: "Corinthians", birthday: "09/08/2013" },
+  { id: "b08", name: "Bueza, Renz Andrei", gender: "Boy", grade: 10, section: "Mayon", birthday: "01/05/2011" },
+  { id: "b09", name: "Cayabyab, Hiro O.", gender: "Boy", grade: 8, section: "Exodus", birthday: "04/04/2011" },
+  { id: "b10", name: "Cruz, Cailey Emmanuel", gender: "Boy", grade: 11, section: "Acacia", birthday: "02/10/2010" },
+  { id: "b11", name: "Cuarteros, Charles R.", gender: "Boy", grade: 10, section: "Pulag", birthday: "09/16/2009" },
+  { id: "b12", name: "Garcia, Kier Zaijan T.", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "12/01/2011" },
+  { id: "b13", name: "Jacinto, Alexander S.", gender: "Boy", grade: 8, section: "Corinthians", birthday: "04/03/2013" },
+  { id: "b14", name: "Lazatin, John Cyrus", gender: "Boy", grade: 7, section: "Magsaysay", birthday: "05/11/2014" },
+  { id: "b15", name: "Mendoza, Joshua", gender: "Boy", grade: 7, section: "Marcos", birthday: "04/04/2014" },
+  { id: "b16", name: "Mendoza, Mark Gabriel", gender: "Boy", grade: 10, section: "Sierra Madre", birthday: "05/02/2011" },
+  { id: "b17", name: "Merhan, Jhon Vincent", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "07/13/2011" },
+  { id: "b18", name: "Plandez, Jhon Harold", gender: "Boy", grade: 12, section: "HUMSS 1, Mirasol", birthday: "11/20/2009" },
+  { id: "b19", name: "Popanes, Jhay M.", gender: "Boy", grade: 9, section: "Magalang", birthday: "06/08/2011" },
+  { id: "b20", name: "Ramos, Gabriel", gender: "Boy", grade: 10, section: "Kanlaon", birthday: "01/14/2011" },
+  { id: "b21", name: "Redoma, Robert M.", gender: "Boy", grade: 8, section: "Ephesians", birthday: "09/22/2011" },
+  { id: "b22", name: "Rodriguez, Jhon Ruan", gender: "Boy", grade: 11, section: "Yakal", birthday: "03/07/2010" },
+  { id: "b23", name: "Sancha, Rhalf Rain P.", gender: "Boy", grade: 8, section: "Chronicles", birthday: "12/09/2011" },
+  { id: "b24", name: "Satingin, John Kaizer", gender: "Boy", grade: 11, section: "Yakal", birthday: "01/11/2010" },
+  { id: "b25", name: "Umali, Yale Rayven G.", gender: "Boy", grade: 11, section: "Yakal", birthday: "03/29/2009" },
+  { id: "b26", name: "Villanueva, Gian Carlo L.", gender: "Boy", grade: 11, section: "Yakal", birthday: "02/27/2010" },
 
-.nav-sports {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.nav-btn {
-  background: transparent;
-  border: none;
-  color: #C9D6E8;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 14px;
-  padding: 14px 16px;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.nav-btn:hover {
-  color: #fff;
-}
-
-.nav-btn.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
-}
-
-.nav-player-info {
-  margin-left: auto;
-}
-
-button, select, input {
-  font-family: inherit;
-}
-
-button:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--gold);
-  outline-offset: 2px;
-}
+  // ---- Girls ----
+  { id: "g01", name: "Alvarez, Jeryssa Coleen L.", gender: "Girl", grade: 10, section: "Banahaw", birthday: "01/13/2011" },
+  { id: "g02", name: "Ballesteros, Yvinneah Zeah C.", gender: "Girl", grade: 9, section: "Mabait", birthday: "04/10/2012" },
+  { id: "g03", name: "Bautista, Glaiza Mae", gender: "Girl", grade: 10, section: "Banahaw", birthday: "12/30/2010" },
+  { id: "g04", name: "Bibat, Chriza Jane", gender: "Girl", grade: 9, section: "Matatag", birthday: "06/15/2011" },
+  { id: "g05", name: "Bueza, Rhianwhen B.", gender: "Girl", grade: 7, section: "Aquino", birthday: "10/04/2013" },
+  { id: "g06", name: "Dano, Amver Jazztine B.", gender: "Girl", grade: 9, section: "Matapat", birthday: "01/31/2012" },
+  { id: "g07", name: "Desepeda, Kate", gender: "Girl", grade: 10, section: "Halcon", birthday: null },
+  { id: "g08", name: "Ilyas, Jamaity Travinne N.", gender: "Girl", grade: 7, section: "Magsaysay", birthday: null },
+  { id: "g09", name: "Jacinto, Alyza Z.", gender: "Girl", grade: 9, section: "Matipid", birthday: "03/27/2012" },
+  { id: "g10", name: "Jagonoy, Huxlie", gender: "Girl", grade: 9, section: "Magalang", birthday: "01/11/2012" },
+  { id: "g11", name: "Latayan, Ashley Anne B.", gender: "Girl", grade: 7, section: "Macapagal", birthday: "05/12/2014" },
+  { id: "g12", name: "Madrideo, Ayesha Mae R.", gender: "Girl", grade: 10, section: "Sierra Madre", birthday: "06/11/2011" },
+  { id: "g13", name: "Manzano, Jolynnes R.", gender: "Girl", grade: 7, section: "Aguinaldo", birthday: "10/25/2013" },
+  { id: "g14", name: "Marasigan, Jermae Q.", gender: "Girl", grade: 11, section: "Acacia", birthday: "06/28/2010" },
+  { id: "g15", name: "Mata, April Dhane A.", gender: "Girl", grade: 8, section: "Chronicles", birthday: "04/20/2013" },
+  { id: "g16", name: "Merabona, Janina Misha M.", gender: "Girl", grade: 9, section: "Magalang", birthday: "08/16/2011" },
+  { id: "g17", name: "Merabona, Jhamaica M.", gender: "Girl", grade: 8, section: "Corinthians", birthday: "01/25/2013" },
+  { id: "g18", name: "Moron, Maria Michaela L.", gender: "Girl", grade: 8, section: "Corinthians", birthday: "09/18/2011" },
+  { id: "g19", name: "Noche, Rhia Candylaria M.", gender: "Girl", grade: 10, section: "Mayon", birthday: "03/05/2011" },
+  { id: "g20", name: "Ramos, Rhian", gender: "Girl", grade: 10, section: "Makiling", birthday: "12/29/2009" },
+  { id: "g21", name: "Rebecca, Rhianne", gender: "Girl", grade: 9, section: "Mabait", birthday: "07/10/2011" },
+  { id: "g22", name: "Regodon, Cezanne", gender: "Girl", grade: 9, section: "Mapagmahal", birthday: "11/26/2011" },
+  { id: "g23", name: "Salanatin, Daniela Corazon", gender: "Girl", grade: 11, section: "Yakal", birthday: null },
+  { id: "g24", name: "Santos, Kim Andrea O.", gender: "Girl", grade: 9, section: "Mapagmahal", birthday: "08/17/2012" },
+  { id: "g25", name: "Satingin, Janyra", gender: "Girl", grade: 7, section: "Garcia", birthday: "01/21/2012" },
+  { id: "g26", name: "Tapas, Samantha Faye B.", gender: "Girl", grade: 8, section: "Ephesians", birthday: "08/12/2012" },
+];
 
 /* ==========================================================================
-   HEADER
+   2. COACH PASSWORD / LOCK SETTINGS
+   By default, the site loads LOCKED: nobody can mark attendance or edit
+   history. Entering this password unlocks editing for the rest of the
+   browser session (it re-locks automatically on page refresh).
+   To change the password, just edit the string below.
    ========================================================================== */
 
-.app-header {
-  background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);
-  color: #fff;
-  padding: 22px 24px 20px;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: var(--shadow-header);
+const COACH_PASSWORD = "spike7";
+
+/* ==========================================================================
+   3. STORAGE HELPERS (Supabase-backed)
+   All attendance now lives in the "attendance" table in Supabase, one row
+   per player per date:
+     { id, created_at, player_id, date, present, timestamp }
+   An in-memory cache mirrors the old Local Storage shape so every other
+   part of the app (stats, report, season counters) can keep reading it
+   synchronously:
+   { "2026-07-03": { "b01": { present: true, timestamp: "8:43:17 AM" }, ... } }
+   The cache is populated once at startup from Supabase, kept in sync live
+   via a Realtime subscription, and updated optimistically on every write.
+
+   NOTE: for upsert-by-(player_id, date) to work without creating duplicate
+   rows, the "attendance" table needs a unique constraint on (player_id,
+   date). Run this once in the Supabase SQL editor if you haven't already:
+
+     alter table attendance
+       add constraint attendance_player_date_unique unique (player_id, date);
+
+   ========================================================================== */
+
+let recordsCache = {};
+let recordsLoaded = false;
+
+// Read the full attendance store (all dates) from the in-memory cache.
+function getAllRecords() {
+  return recordsCache;
 }
 
-.header-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 18px;
+// Get the attendance record object for one specific date (creates none if absent).
+function getRecordForDate(dateKey) {
+  return recordsCache[dateKey] || {};
 }
 
-.app-title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 28px;
-  letter-spacing: 0.3px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+// Pull every attendance row from Supabase and rebuild the in-memory cache.
+// Called once at startup, and can be re-called to force a full resync.
+async function loadAllRecordsFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("attendance")
+    .select("player_id, date, present, timestamp");
+
+  if (error) {
+    console.error("Could not load attendance data from Supabase:", error);
+    window.alert("Could not load attendance data. Check your connection and refresh the page.");
+    return;
+  }
+
+  const rebuilt = {};
+  (data || []).forEach((row) => {
+    if (!rebuilt[row.date]) rebuilt[row.date] = {};
+    rebuilt[row.date][row.player_id] = {
+      present: !!row.present,
+      timestamp: row.timestamp || null,
+    };
+  });
+
+  recordsCache = rebuilt;
+  recordsLoaded = true;
 }
 
-.ball {
-  font-size: 26px;
+// Mark or unmark a single player present for a given date. Updates the
+// local cache immediately (optimistic UI), then writes through to
+// Supabase. Other devices pick up the change via the Realtime subscription
+// below; this device also gets a Realtime echo, which is harmless since
+// the write is idempotent.
+async function setPlayerAttendance(dateKey, playerId, isPresent, timestamp) {
+  if (!recordsCache[dateKey]) recordsCache[dateKey] = {};
+  const previousEntry = recordsCache[dateKey][playerId];
+
+  recordsCache[dateKey][playerId] = isPresent
+    ? { present: true, timestamp: timestamp }
+    : { present: false, timestamp: null };
+
+  const { error } = await supabaseClient.from("attendance").upsert(
+    {
+      player_id: playerId,
+      date: dateKey,
+      present: isPresent,
+      timestamp: isPresent ? timestamp : null,
+    },
+    { onConflict: "player_id,date" }
+  );
+
+  if (error) {
+    console.error("Could not save attendance to Supabase:", error);
+
+    // Roll back the optimistic update so the UI reflects reality.
+    if (previousEntry) {
+      recordsCache[dateKey][playerId] = previousEntry;
+    } else {
+      delete recordsCache[dateKey][playerId];
+    }
+    refreshAll();
+    window.alert("Could not save attendance — check your connection and try again.");
+  }
 }
 
-.datetime {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  font-family: var(--font-mono);
-  color: var(--gold-soft);
+// Apply one Realtime change (from any device, including this one) to the
+// local cache and repaint whatever's on screen.
+function applyRealtimeChange(payload) {
+  const row = payload.eventType === "DELETE" ? payload.old : payload.new;
+  if (!row || !row.date || !row.player_id) return;
+
+  if (payload.eventType === "DELETE") {
+    if (recordsCache[row.date]) delete recordsCache[row.date][row.player_id];
+  } else {
+    if (!recordsCache[row.date]) recordsCache[row.date] = {};
+    recordsCache[row.date][row.player_id] = {
+      present: !!row.present,
+      timestamp: row.timestamp || null,
+    };
+  }
+
+  refreshAll();
 }
 
-.current-date {
-  font-size: 13px;
-  color: #C9D6E8;
-  letter-spacing: 0.3px;
-}
-
-.current-time {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--gold);
-  letter-spacing: 0.5px;
-}
-
-/* --- Scoreboard stat bar --- */
-.stats-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(242, 183, 5, 0.25);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 84px;
-}
-
-.stat-value {
-  font-family: var(--font-mono);
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--gold);
-  line-height: 1.1;
-}
-
-.stat-present .stat-value {
-  color: #6FE39C;
-}
-
-.stat-absent .stat-value {
-  color: #F08A8A;
-}
-
-.stat-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #B9C6DA;
-  margin-top: 2px;
-}
-
-.stat-divider {
-  width: 1px;
-  align-self: stretch;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.filter-summary {
-  text-align: center;
-  color: #B9C6DA;
-  font-size: 12.5px;
-  margin: 10px 0 0;
-  letter-spacing: 0.2px;
+// Subscribe to live changes on the attendance table so every open device
+// (coach's tablet, phone at the gym, etc.) stays in sync instantly.
+function subscribeToRealtimeUpdates() {
+  supabaseClient
+    .channel("attendance-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "attendance" },
+      applyRealtimeChange
+    )
+    .subscribe((status) => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.error("Realtime subscription issue:", status);
+      }
+    });
 }
 
 /* ==========================================================================
-   HISTORY BANNER (read-only past dates)
+   4. DATE / TIME HELPERS
    ========================================================================== */
 
-.history-banner {
-  margin: 16px 24px 0;
-  background: var(--gold-soft);
-  border: 1px solid #EAD48A;
-  color: #6B5300;
-  border-radius: var(--radius-sm);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 500;
+// "2026-07-03" style key used to namespace attendance by day.
+function toDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--navy);
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 14px;
-  text-decoration: underline;
-  padding: 4px;
+// "Friday, July 3, 2026" for the header.
+function formatDateLong(date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+// "10:32:15 AM" style live clock / timestamp text.
+function formatTime(date) {
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+function todayKey() {
+  return toDateKey(new Date());
 }
 
 /* ==========================================================================
-   CONTROLS
+   5. APPLICATION STATE
    ========================================================================== */
 
-.controls {
-  padding: 18px 24px 4px;
+const state = {
+  activePage: "volleyball",     // volleyball | basketball | athletics | dance | playerinfo
+  viewingDateKey: todayKey(),   // which day's attendance is on screen
+  searchTerm: "",
+  genderFilter: "all",
+  gradeFilter: "all",
+  sectionFilter: "all",
+  sortBy: "name-asc",
+  reportMode: false,
+  unlocked: false,              // coach edit privileges for this session
+  piSport: "",                  // Player Information: selected sport
+  piSearchTerm: "",
+};
+
+/* ==========================================================================
+   6. DOM REFERENCES
+   ========================================================================== */
+
+const dom = {
+  navButtons: document.querySelectorAll(".nav-btn"),
+  pages: {
+    volleyball: document.getElementById("page-volleyball"),
+    basketball: document.getElementById("page-basketball"),
+    athletics: document.getElementById("page-athletics"),
+    dance: document.getElementById("page-dance"),
+    playerinfo: document.getElementById("page-playerinfo"),
+  },
+
+  currentDate: document.getElementById("currentDate"),
+  currentTime: document.getElementById("currentTime"),
+  statTotal: document.getElementById("statTotal"),
+  statPresent: document.getElementById("statPresent"),
+  statAbsent: document.getElementById("statAbsent"),
+  filterSummary: document.getElementById("filterSummary"),
+
+  historyBanner: document.getElementById("historyBanner"),
+  historyBannerText: document.getElementById("historyBannerText"),
+  backToTodayBtn: document.getElementById("backToTodayBtn"),
+
+  controlsSection: document.getElementById("controlsSection"),
+  searchInput: document.getElementById("searchInput"),
+  dateSelect: document.getElementById("dateSelect"),
+  lockToggleBtn: document.getElementById("lockToggleBtn"),
+  reportModeBtn: document.getElementById("reportModeBtn"),
+  genderFilter: document.getElementById("genderFilter"),
+  gradeFilter: document.getElementById("gradeFilter"),
+  sectionFilter: document.getElementById("sectionFilter"),
+  sortSelect: document.getElementById("sortSelect"),
+
+  mainView: document.getElementById("mainView"),
+  studentGrid: document.getElementById("studentGrid"),
+  emptyState: document.getElementById("emptyState"),
+
+  reportView: document.getElementById("reportView"),
+  reportDate: document.getElementById("reportDate"),
+  reportTime: document.getElementById("reportTime"),
+  reportTotalAll: document.getElementById("reportTotalAll"),
+  reportTotalPresent: document.getElementById("reportTotalPresent"),
+  reportTotalAbsent: document.getElementById("reportTotalAbsent"),
+  reportGirlsList: document.getElementById("reportGirlsList"),
+  reportBoysList: document.getElementById("reportBoysList"),
+  reportGirlsCount: document.getElementById("reportGirlsCount"),
+  reportBoysCount: document.getElementById("reportBoysCount"),
+  exitReportBtn: document.getElementById("exitReportBtn"),
+  downloadReportBtn: document.getElementById("downloadReportBtn"),
+
+  piSportSelect: document.getElementById("piSportSelect"),
+  piSearchWrap: document.getElementById("piSearchWrap"),
+  piSearchInput: document.getElementById("piSearchInput"),
+  piPlaceholder: document.getElementById("piPlaceholder"),
+  piEmptySport: document.getElementById("piEmptySport"),
+  piListWrap: document.getElementById("piListWrap"),
+  piList: document.getElementById("piList"),
+};
+
+/* ==========================================================================
+   7. NAVIGATION BETWEEN SPORT PAGES
+   ========================================================================== */
+
+function switchPage(pageName) {
+  state.activePage = pageName;
+
+  Object.keys(dom.pages).forEach((key) => {
+    dom.pages[key].classList.toggle("hidden", key !== pageName);
+  });
+
+  dom.navButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === pageName);
+  });
+
+  // Leaving Volleyball while Report Mode was open should reset it, so
+  // coming back later starts on the normal grid view.
+  if (pageName !== "volleyball" && state.reportMode) {
+    exitReportMode();
+  }
+
+  if (pageName === "playerinfo") {
+    renderPlayerInfo();
+  }
 }
 
-.controls-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.search-wrap {
-  position: relative;
-  flex: 1 1 220px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  opacity: 0.5;
-}
-
-#searchInput {
-  width: 100%;
-  padding: 11px 14px 11px 38px;
-  border: 1px solid var(--gray-light);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  background: var(--card-bg);
-  color: var(--ink);
-}
-
-.date-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--card-bg);
-  border: 1px solid var(--gray-light);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-}
-
-.date-label {
-  font-size: 12px;
-  color: var(--gray);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-#dateSelect {
-  border: none;
-  font-size: 14px;
-  color: var(--ink);
-  background: transparent;
-}
-
-select {
-  padding: 10px 12px;
-  border: 1px solid var(--gray-light);
-  border-radius: var(--radius-sm);
-  background: var(--card-bg);
-  font-size: 14px;
-  color: var(--ink-soft);
-  flex: 1 1 140px;
-}
-
-.btn-primary {
-  background: var(--gold);
-  color: var(--navy);
-  border: none;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 11px 20px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease, transform 0.1s ease;
-}
-
-.btn-primary:hover {
-  background: var(--gold-dark);
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-.btn-secondary {
-  background: var(--navy);
-  color: #fff;
-  border: none;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 11px 20px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: var(--navy-light);
-}
-
-/* --- Coach lock toggle --- */
-.btn-lock {
-  border: none;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 11px 16px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-lock.locked {
-  background: var(--gray-light);
-  color: var(--ink-soft);
-}
-
-.btn-lock.locked:hover {
-  background: #D4D9E1;
-}
-
-.btn-lock.unlocked {
-  background: var(--success);
-  color: #fff;
-}
-
-.btn-lock.unlocked:hover {
-  background: #166030;
+function onNavClick(e) {
+  const btn = e.target.closest(".nav-btn");
+  if (!btn) return;
+  switchPage(btn.dataset.page);
 }
 
 /* ==========================================================================
-   STUDENT GRID + CARDS
+   8. RENDERING
    ========================================================================== */
 
-main {
-  padding: 12px 24px 0;
+// Update the live date/time display in the header. Also detects midnight
+// rollover so a new attendance sheet starts automatically while the app
+// stays open, without disturbing someone viewing a past date on purpose.
+function updateClock() {
+  const now = new Date();
+  dom.currentDate.textContent = formatDateLong(now);
+  dom.currentTime.textContent = formatTime(now);
+
+  const liveTodayKey = toDateKey(now);
+  const wasViewingToday = state.viewingDateKey === state.lastKnownToday;
+
+  if (state.lastKnownToday && liveTodayKey !== state.lastKnownToday && wasViewingToday) {
+    // Midnight passed while the user was viewing "today" — follow it forward.
+    state.viewingDateKey = liveTodayKey;
+    dom.dateSelect.value = liveTodayKey;
+    dom.dateSelect.max = liveTodayKey;
+    refreshAll();
+  }
+
+  state.lastKnownToday = liveTodayKey;
+  dom.dateSelect.max = liveTodayKey;
 }
 
-.student-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+// Whether the date currently being viewed is today.
+function isViewingToday() {
+  return state.viewingDateKey === todayKey();
 }
 
-.empty-state {
-  text-align: center;
-  color: var(--gray);
-  padding: 40px 10px;
-  font-size: 15px;
+// Whether attendance can currently be edited. The lock applies to every
+// date, including today — nothing is editable until the coach unlocks it.
+function canEdit() {
+  return state.unlocked;
 }
 
-.hidden {
-  display: none !important;
+// Recompute totals for the CURRENTLY FILTERED set of players and paint
+// the scoreboard, so the numbers always match what's on screen.
+function updateStats() {
+  const record = getRecordForDate(state.viewingDateKey);
+  const filtered = getFilteredSortedRoster();
+  const presentCount = filtered.filter((p) => record[p.id] && record[p.id].present).length;
+
+  dom.statTotal.textContent = filtered.length;
+  dom.statPresent.textContent = presentCount;
+  dom.statAbsent.textContent = filtered.length - presentCount;
+
+  dom.filterSummary.textContent = buildFilterSummaryText(filtered.length);
 }
 
-.student-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-  padding: 16px 16px 14px 18px;
-  position: relative;
-  border-left: 5px solid var(--blue);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: box-shadow 0.15s ease;
+// Human-readable summary of which filters are currently narrowing the list.
+function buildFilterSummaryText(count) {
+  const parts = [];
+  if (state.genderFilter !== "all") parts.push(state.genderFilter === "Boy" ? "Boys" : "Girls");
+  if (state.gradeFilter !== "all") parts.push(`Grade ${state.gradeFilter}`);
+  if (state.sectionFilter !== "all") parts.push(state.sectionFilter);
+  if (state.searchTerm.trim()) parts.push(`matching "${state.searchTerm.trim()}"`);
+
+  if (parts.length === 0) {
+    return `Showing all ${ROSTER.length} players`;
+  }
+  return `Showing ${count} player${count === 1 ? "" : "s"} — ${parts.join(" · ")}`;
 }
 
-.student-card.gender-girl {
-  border-left-color: var(--gold);
+// Show/hide the banner explaining why the sheet can't be edited right now.
+function updateHistoryBanner() {
+  if (isViewingToday()) {
+    if (state.unlocked) {
+      dom.historyBanner.classList.add("hidden");
+    } else {
+      dom.historyBannerText.textContent =
+        "This attendance sheet is locked. Unlock with the coach password to mark players present.";
+      dom.backToTodayBtn.classList.add("hidden");
+      dom.historyBanner.classList.remove("hidden");
+    }
+    return;
+  }
+  const niceDate = formatDateLong(new Date(state.viewingDateKey + "T00:00:00"));
+  dom.historyBannerText.textContent = state.unlocked
+    ? `Viewing ${niceDate} — unlocked for editing (coach mode).`
+    : `Viewing ${niceDate} — this attendance sheet is read-only. Unlock to edit.`;
+  dom.backToTodayBtn.classList.remove("hidden");
+  dom.historyBanner.classList.remove("hidden");
 }
 
-.student-card.is-present {
-  background: linear-gradient(180deg, var(--success-bg) 0%, var(--card-bg) 60px);
+// Build one player card element.
+function buildStudentCard(player, record, seasonStats) {
+  const entry = record[player.id];
+  const isPresent = !!(entry && entry.present);
+  const editable = canEdit();
+
+  const card = document.createElement("div");
+  card.className = "student-card" + (player.gender === "Girl" ? " gender-girl" : "") + (isPresent ? " is-present" : "");
+
+  const genderTagClass = player.gender === "Girl" ? "tag tag-girl" : "tag";
+  const birthdayText = player.birthday ? player.birthday : "Not on file";
+  const stats = seasonStats[player.id];
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="card-name">${escapeHtml(player.name)}</span>
+      <span class="status-dot" aria-hidden="true"></span>
+    </div>
+    <div class="card-meta">
+      <span class="${genderTagClass}">${player.gender}</span>
+      <span class="tag">Grade ${player.grade}</span>
+      <span>Section: ${escapeHtml(player.section)}</span>
+      <span>🎂 ${birthdayText}</span>
+    </div>
+    <div class="card-status-row">
+      <div class="status-info">
+        <span class="status-text ${isPresent ? "present" : ""}">${isPresent ? "Present" : "Not Yet Marked"}</span>
+        <span class="status-timestamp">${isPresent ? "Marked at: " + entry.timestamp : "&nbsp;"}</span>
+      </div>
+      ${editable
+        ? `<button class="btn-present ${isPresent ? "marked" : ""}" data-player-id="${player.id}">${isPresent ? "✓ Present" : "Mark Present"}</button>`
+        : `<span class="readonly-note">Locked</span>`
+      }
+    </div>
+    <div class="season-counter">
+      <span class="sc-present">${stats.present} Present</span>
+      <span class="sc-absent">${stats.absent} Absent</span>
+      <span>· ${stats.trainings} training${stats.trainings === 1 ? "" : "s"} so far</span>
+    </div>
+  `;
+
+  return card;
 }
 
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
+// Basic HTML escaping for names/sections rendered via innerHTML.
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
 }
 
-.card-name {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 19px;
-  color: var(--ink);
-  line-height: 1.2;
+// Apply search + filters + sort to the roster and render the grid.
+function renderGrid() {
+  const record = getRecordForDate(state.viewingDateKey);
+  const seasonStats = computeAllSeasonStats();
+  const players = getFilteredSortedRoster();
+
+  dom.studentGrid.innerHTML = "";
+
+  if (players.length === 0) {
+    dom.emptyState.classList.remove("hidden");
+  } else {
+    dom.emptyState.classList.add("hidden");
+    const fragment = document.createDocumentFragment();
+    players.forEach((player) => {
+      fragment.appendChild(buildStudentCard(player, record, seasonStats));
+    });
+    dom.studentGrid.appendChild(fragment);
+  }
 }
 
-.status-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  border: 2px solid var(--gray-light);
-  background: #fff;
-  flex-shrink: 0;
-  margin-top: 4px;
+/* ---- Report Mode rendering ---- */
+
+function renderReport() {
+  const now = new Date();
+  const viewingDate = new Date(state.viewingDateKey + "T00:00:00");
+  const record = getRecordForDate(state.viewingDateKey);
+
+  dom.reportDate.textContent = formatDateLong(viewingDate);
+  dom.reportTime.textContent = isViewingToday() ? formatTime(now) : "Historical record";
+
+  const girls = ROSTER.filter((p) => p.gender === "Girl");
+  const boys = ROSTER.filter((p) => p.gender === "Boy");
+
+  const presentTotal = ROSTER.filter((p) => record[p.id] && record[p.id].present).length;
+
+  dom.reportTotalAll.textContent = ROSTER.length;
+  dom.reportTotalPresent.textContent = presentTotal;
+  dom.reportTotalAbsent.textContent = ROSTER.length - presentTotal;
+
+  dom.reportGirlsCount.textContent = `${girls.filter((p) => record[p.id] && record[p.id].present).length}/${girls.length} present`;
+  dom.reportBoysCount.textContent = `${boys.filter((p) => record[p.id] && record[p.id].present).length}/${boys.length} present`;
+
+  dom.reportGirlsList.innerHTML = buildReportRows(girls, record);
+  dom.reportBoysList.innerHTML = buildReportRows(boys, record);
 }
 
-.student-card.is-present .status-dot {
-  background: var(--success);
-  border-color: var(--success);
-}
-
-.card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  font-size: 12.5px;
-  color: var(--ink-soft);
-}
-
-.card-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tag {
-  background: var(--blue-light);
-  color: var(--blue);
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 11.5px;
-}
-
-.tag.tag-girl {
-  background: var(--gold-soft);
-  color: var(--gold-dark);
-}
-
-.card-status-row {
-  margin-top: 2px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--gray-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.status-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.status-text {
-  font-weight: 700;
-  font-size: 13.5px;
-  color: var(--gray);
-}
-
-.status-text.present {
-  color: var(--success);
-}
-
-.status-timestamp {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.btn-present {
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 10px 16px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  background: var(--navy);
-  color: #fff;
-  white-space: nowrap;
-  transition: background 0.15s ease, transform 0.1s ease;
-}
-
-.btn-present:hover {
-  background: var(--navy-light);
-}
-
-.btn-present:active {
-  transform: scale(0.97);
-}
-
-.btn-present.marked {
-  background: var(--success);
-}
-
-.btn-present.marked:hover {
-  background: #166030;
-}
-
-.readonly-note {
-  font-size: 11.5px;
-  color: var(--gray);
-  font-style: italic;
-}
-
-/* --- Season-long per-player counter --- */
-.season-counter {
-  display: flex;
-  gap: 10px;
-  font-size: 11.5px;
-  color: var(--ink-soft);
-  padding-top: 8px;
-  border-top: 1px dashed var(--gray-light);
-  font-family: var(--font-mono);
-}
-
-.season-counter .sc-present {
-  color: var(--success);
-  font-weight: 600;
-}
-
-.season-counter .sc-absent {
-  color: var(--danger);
-  font-weight: 600;
+function buildReportRows(players, record) {
+  const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name));
+  return sorted
+    .map((p, index) => {
+      const entry = record[p.id];
+      const isPresent = !!(entry && entry.present);
+      return `
+        <div class="report-row ${isPresent ? "present" : ""}">
+          <span class="report-row-index">${index + 1}.</span>
+          <span class="report-row-name">${escapeHtml(p.name)}</span>
+          ${isPresent
+            ? `<span class="report-row-time">${entry.timestamp}</span>`
+            : `<span class="report-row-status">ABSENT</span>`
+          }
+        </div>
+      `;
+    })
+    .join("");
 }
 
 /* ==========================================================================
-   PLACEHOLDER SPORT PAGES
+   9. FILTERING / SORTING (with grade -> section cascade)
    ========================================================================== */
 
-.placeholder-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 24px;
+// Map of grade -> sorted list of sections that actually exist in that grade,
+// built straight from the roster so it always matches the real data.
+function buildGradeSectionMap() {
+  const map = {};
+  ROSTER.forEach((p) => {
+    if (!map[p.grade]) map[p.grade] = new Set();
+    map[p.grade].add(p.section);
+  });
+  const sorted = {};
+  Object.keys(map).sort((a, b) => a - b).forEach((grade) => {
+    sorted[grade] = [...map[grade]].sort((a, b) => a.localeCompare(b));
+  });
+  return sorted;
 }
 
-.placeholder-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 48px 40px;
-  text-align: center;
-  max-width: 420px;
+const GRADE_SECTION_MAP = buildGradeSectionMap();
+
+// Populate the Grade dropdown once, then keep Section in sync with it.
+function populateFilterOptions() {
+  Object.keys(GRADE_SECTION_MAP).forEach((grade) => {
+    const opt = document.createElement("option");
+    opt.value = grade;
+    opt.textContent = `Grade ${grade}`;
+    dom.gradeFilter.appendChild(opt);
+  });
+
+  populateSectionOptions("all");
 }
 
-.placeholder-icon {
-  font-size: 48px;
-  display: block;
-  margin-bottom: 14px;
+// Rebuild the Section dropdown to only show sections within the chosen grade.
+// "all" grade shows every section across the whole roster.
+function populateSectionOptions(gradeValue) {
+  dom.sectionFilter.innerHTML = '<option value="all">All Sections</option>';
+
+  const sections = gradeValue === "all"
+    ? [...new Set(ROSTER.map((p) => p.section))].sort((a, b) => a.localeCompare(b))
+    : (GRADE_SECTION_MAP[gradeValue] || []);
+
+  sections.forEach((s) => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    dom.sectionFilter.appendChild(opt);
+  });
 }
 
-.placeholder-card h2 {
-  font-family: var(--font-display);
-  font-size: 26px;
-  color: var(--navy);
-  margin: 0 0 10px;
-}
+function getFilteredSortedRoster() {
+  let players = ROSTER.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(state.searchTerm.toLowerCase());
+    const matchesGender = state.genderFilter === "all" || p.gender === state.genderFilter;
+    const matchesGrade = state.gradeFilter === "all" || String(p.grade) === state.gradeFilter;
+    const matchesSection = state.sectionFilter === "all" || p.section === state.sectionFilter;
+    return matchesSearch && matchesGender && matchesGrade && matchesSection;
+  });
 
-.placeholder-card p {
-  color: var(--ink-soft);
-  font-size: 14.5px;
-  line-height: 1.5;
-  margin: 0;
+  switch (state.sortBy) {
+    case "name-asc":
+      players.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case "name-desc":
+      players.sort((a, b) => b.name.localeCompare(a.name));
+      break;
+    case "grade":
+      players.sort((a, b) => a.grade - b.grade || a.name.localeCompare(b.name));
+      break;
+    case "section":
+      players.sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name));
+      break;
+  }
+
+  return players;
 }
 
 /* ==========================================================================
-   PLAYER INFORMATION PAGE
+   10. SEASON-LONG PER-PLAYER COUNTERS
+   A "training day" is any date key in Local Storage that currently has at
+   least one player marked present. Simply toggling a player Present and
+   back to Not Yet Marked (a misclick) leaves no one present that day, so
+   it does NOT count as a training — this stays true even if the toggle
+   happened and was undone weeks ago, since we check the saved data itself
+   rather than remembering that an update occurred.
    ========================================================================== */
 
-.playerinfo-page {
-  padding: 26px 24px 48px;
-}
+function computeAllSeasonStats() {
+  const allRecords = getAllRecords();
 
-.playerinfo-panel {
-  max-width: 900px;
-  margin: 0 auto;
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 26px 28px 30px;
-}
+  // Only keep dates where at least one player is currently present.
+  const trainingDates = Object.keys(allRecords).filter((date) =>
+    Object.values(allRecords[date]).some((entry) => entry && entry.present)
+  );
 
-.playerinfo-title {
-  font-family: var(--font-display);
-  font-size: 26px;
-  color: var(--navy);
-  margin: 0 0 4px;
-}
+  const stats = {};
 
-.playerinfo-sub {
-  color: var(--gray);
-  font-size: 13.5px;
-  margin: 0 0 18px;
-}
+  ROSTER.forEach((p) => {
+    let present = 0;
+    trainingDates.forEach((date) => {
+      if (allRecords[date][p.id] && allRecords[date][p.id].present) present += 1;
+    });
+    stats[p.id] = {
+      present: present,
+      absent: trainingDates.length - present,
+      trainings: trainingDates.length,
+    };
+  });
 
-.pi-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.pi-controls select {
-  flex: 0 1 220px;
-}
-
-.pi-search-wrap {
-  flex: 1 1 220px;
-}
-
-.pi-placeholder {
-  text-align: center;
-  color: var(--gray);
-  padding: 30px 10px;
-  font-size: 14.5px;
-}
-
-.pi-list-wrap {
-  border-top: 1px solid var(--gray-light);
-  padding-top: 12px;
-}
-
-.pi-list-header {
-  display: grid;
-  grid-template-columns: 2.4fr 1fr 1fr 1.2fr;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--gray);
-  padding: 0 12px 8px;
-  font-weight: 600;
-}
-
-.pi-row {
-  display: grid;
-  grid-template-columns: 2.4fr 1fr 1fr 1.2fr;
-  align-items: center;
-  background: var(--bg);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  font-size: 13.5px;
-}
-
-.pi-row-name {
-  display: flex;
-  flex-direction: column;
-}
-
-.pi-row-name strong {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.pi-row-name small {
-  color: var(--gray);
-  font-size: 11.5px;
-}
-
-.pi-present {
-  color: var(--success);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-
-.pi-absent {
-  color: var(--danger);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-
-.pi-total {
-  color: var(--ink-soft);
-  font-family: var(--font-mono);
+  return stats;
 }
 
 /* ==========================================================================
-   REPORT MODE
+   11. COACH LOCK / UNLOCK
+   The site loads locked by default so visitors can only view. Entering the
+   coach password unlocks marking attendance today AND editing/correcting
+   past, otherwise read-only, attendance sheets. It re-locks on refresh.
    ========================================================================== */
 
-.report-view {
-  padding: 20px 24px 40px;
+function updateLockButton() {
+  if (state.unlocked) {
+    dom.lockToggleBtn.textContent = "🔓 Unlocked (Coach)";
+    dom.lockToggleBtn.classList.remove("locked");
+    dom.lockToggleBtn.classList.add("unlocked");
+  } else {
+    dom.lockToggleBtn.textContent = "🔒 Locked";
+    dom.lockToggleBtn.classList.remove("unlocked");
+    dom.lockToggleBtn.classList.add("locked");
+  }
 }
 
-.report-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 28px 30px;
-  max-width: 900px;
-  margin: 0 auto;
-}
+function toggleLock() {
+  if (state.unlocked) {
+    // Re-locking never requires a password.
+    state.unlocked = false;
+    updateLockButton();
+    refreshAll();
+    return;
+  }
 
-.report-header {
-  text-align: center;
-  border-bottom: 2px solid var(--navy);
-  padding-bottom: 16px;
-  margin-bottom: 20px;
-}
-
-.report-title {
-  font-family: var(--font-display);
-  font-size: 30px;
-  color: var(--navy);
-  margin: 0 0 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.report-meta {
-  font-family: var(--font-mono);
-  color: var(--ink-soft);
-  font-size: 14px;
-}
-
-.report-meta-dot {
-  margin: 0 8px;
-  color: var(--gray-light);
-}
-
-.report-totals {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 26px;
-  flex-wrap: wrap;
-}
-
-.report-total-box {
-  background: var(--bg);
-  border-radius: var(--radius-md);
-  padding: 14px 26px;
-  text-align: center;
-  min-width: 110px;
-}
-
-.report-total-value {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--navy);
-}
-
-.report-total-present .report-total-value {
-  color: var(--success);
-}
-
-.report-total-absent .report-total-value {
-  color: var(--danger);
-}
-
-.report-total-label {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--gray);
-}
-
-.report-groups {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-
-.report-group-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--navy);
-  border-bottom: 1px solid var(--gray-light);
-  padding-bottom: 8px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.report-group-count {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--gray);
-  font-weight: 400;
-}
-
-.report-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.report-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13.5px;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-}
-
-.report-row-index {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--gray);
-  min-width: 20px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.report-row.present .report-row-index {
-  color: var(--success);
-}
-
-.report-row.present {
-  background: var(--success-bg);
-}
-
-.report-row-name {
-  font-weight: 600;
-  color: var(--ink);
-  flex: 1 1 auto;
-}
-
-.report-row-time {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.report-row-status {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--gray);
-}
-
-.report-row.present .report-row-status {
-  color: var(--success);
-}
-
-.report-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin: 24px auto 0;
-  flex-wrap: wrap;
+  const entered = window.prompt("Enter coach password to unlock editing:");
+  if (entered === null) return; // cancelled
+  if (entered === COACH_PASSWORD) {
+    state.unlocked = true;
+    updateLockButton();
+    refreshAll();
+  } else {
+    window.alert("Incorrect password.");
+  }
 }
 
 /* ==========================================================================
-   RESPONSIVE
+   12. PLAYER INFORMATION TAB
+   Gated by a sport filter: nothing shows until a sport is chosen. Only
+   Volleyball has real roster + attendance data right now.
    ========================================================================== */
 
-@media (max-width: 720px) {
-  .app-title {
-    font-size: 22px;
+function onPiSportChange(e) {
+  state.piSport = e.target.value;
+  renderPlayerInfo();
+}
+
+function onPiSearchInput(e) {
+  state.piSearchTerm = e.target.value;
+  renderPlayerInfo();
+}
+
+function renderPlayerInfo() {
+  const sport = state.piSport;
+
+  if (!sport) {
+    dom.piPlaceholder.classList.remove("hidden");
+    dom.piEmptySport.classList.add("hidden");
+    dom.piSearchWrap.classList.add("hidden");
+    dom.piListWrap.classList.add("hidden");
+    return;
   }
 
-  .stats-bar {
-    gap: 10px;
+  if (sport !== "volleyball") {
+    const labels = { basketball: "Basketball", athletics: "Athletics", dance: "Cultural Dance Group" };
+    dom.piPlaceholder.classList.add("hidden");
+    dom.piSearchWrap.classList.add("hidden");
+    dom.piListWrap.classList.add("hidden");
+    dom.piEmptySport.textContent = `No player data yet for ${labels[sport]} — it doesn't have a roster or attendance sheet set up.`;
+    dom.piEmptySport.classList.remove("hidden");
+    return;
   }
 
-  .stat-item {
-    min-width: 70px;
+  // Volleyball: show the searchable list with season totals.
+  dom.piPlaceholder.classList.add("hidden");
+  dom.piEmptySport.classList.add("hidden");
+  dom.piSearchWrap.classList.remove("hidden");
+  dom.piListWrap.classList.remove("hidden");
+
+  const seasonStats = computeAllSeasonStats();
+  const term = state.piSearchTerm.toLowerCase();
+  const players = ROSTER
+    .filter((p) => p.name.toLowerCase().includes(term))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  dom.piList.innerHTML = players
+    .map((p) => {
+      const s = seasonStats[p.id];
+      return `
+        <div class="pi-row">
+          <span class="pi-row-name" data-label="Player">
+            <strong>${escapeHtml(p.name)}</strong>
+            <small>${p.gender} · Grade ${p.grade} · ${escapeHtml(p.section)}</small>
+          </span>
+          <span class="pi-present" data-label="Present">${s.present}</span>
+          <span class="pi-absent" data-label="Absent">${s.absent}</span>
+          <span class="pi-total" data-label="Trainings held">${s.trainings}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+/* ==========================================================================
+   13. EVENT HANDLERS
+   ========================================================================== */
+
+// Toggle a single player's Present status for the date currently in view.
+function handlePresentToggle(playerId) {
+  if (!canEdit()) return;
+
+  const record = getRecordForDate(state.viewingDateKey);
+  const entry = record[playerId];
+  const currentlyPresent = !!(entry && entry.present);
+
+  const now = new Date();
+  // Not awaited: the cache updates synchronously before the network call,
+  // so refreshAll() below already reflects the new state. The Supabase
+  // write continues in the background (see setPlayerAttendance).
+  setPlayerAttendance(state.viewingDateKey, playerId, !currentlyPresent, formatTime(now));
+
+  refreshAll();
+}
+
+// Grid click delegation — catches clicks on any "Mark Present" button.
+function onGridClick(e) {
+  const btn = e.target.closest(".btn-present");
+  if (!btn) return;
+  handlePresentToggle(btn.dataset.playerId);
+}
+
+function onSearchInput(e) {
+  state.searchTerm = e.target.value;
+  renderGrid();
+  updateStats();
+}
+
+function onGenderFilterChange(e) {
+  state.genderFilter = e.target.value;
+  renderGrid();
+  updateStats();
+}
+
+function onGradeFilterChange(e) {
+  state.gradeFilter = e.target.value;
+  state.sectionFilter = "all";
+  populateSectionOptions(e.target.value);
+  renderGrid();
+  updateStats();
+}
+
+function onSectionFilterChange(e) {
+  state.sectionFilter = e.target.value;
+  renderGrid();
+  updateStats();
+}
+
+function onSortChange(e) {
+  state.sortBy = e.target.value;
+  renderGrid();
+}
+
+// Switch which day's attendance sheet is being viewed.
+function onDateSelectChange(e) {
+  state.viewingDateKey = e.target.value;
+  refreshAll();
+}
+
+function onBackToToday() {
+  state.viewingDateKey = todayKey();
+  dom.dateSelect.value = state.viewingDateKey;
+  refreshAll();
+}
+
+function enterReportMode() {
+  state.reportMode = true;
+  dom.controlsSection.classList.add("hidden");
+  dom.mainView.classList.add("hidden");
+  dom.historyBanner.classList.add("hidden");
+  dom.reportView.classList.remove("hidden");
+  renderReport();
+}
+
+function exitReportMode() {
+  state.reportMode = false;
+  dom.controlsSection.classList.remove("hidden");
+  dom.mainView.classList.remove("hidden");
+  dom.reportView.classList.add("hidden");
+  updateHistoryBanner();
+}
+
+// Capture ONLY the report card as one PNG image and download it — the sticky
+// nav bar and any page chrome are explicitly hidden in the cloned document
+// so they can never bleed into the captured image, regardless of scroll
+// position. The coach doesn't have to take two separate screenshots.
+function downloadReportImage() {
+  const target = document.querySelector(".report-card");
+  const btn = dom.downloadReportBtn;
+
+  if (typeof html2canvas !== "function") {
+    window.alert("Image export isn't available right now — check your internet connection and try again.");
+    return;
   }
 
-  .stat-value {
-    font-size: 21px;
-  }
+  const originalLabel = btn.textContent;
+  btn.textContent = "Generating image…";
+  btn.disabled = true;
 
-  .controls-row {
-    flex-direction: column;
-  }
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
 
-  select {
-    flex: 1 1 auto;
-    width: 100%;
-  }
+  html2canvas(target, {
+    backgroundColor: "#ffffff",
+    scale: 2, // sharper image for screenshots/printing
+    useCORS: true,
+    onclone: (clonedDoc) => {
+      // Strip anything outside the report card from the clone used for
+      // rendering, so only the attendance report itself is ever captured.
+      const nav = clonedDoc.querySelector(".main-nav");
+      if (nav) nav.style.display = "none";
 
-  .student-grid {
-    grid-template-columns: 1fr;
-  }
+      const actions = clonedDoc.querySelector(".report-actions");
+      if (actions) actions.style.display = "none";
+    },
+  })
+    .then((canvas) => {
+      const link = document.createElement("a");
+      link.download = `attendance-report-${state.viewingDateKey}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    })
+    .catch((err) => {
+      console.error("Could not generate report image:", err);
+      window.alert("Something went wrong generating the image. Please try again.");
+    })
+    .finally(() => {
+      window.scrollTo(scrollX, scrollY);
+      btn.textContent = originalLabel;
+      btn.disabled = false;
+    });
+}
 
-  .btn-present {
-    padding: 13px 16px;
-    font-size: 14px;
-  }
+/* ==========================================================================
+   14. INIT
+   ========================================================================== */
 
-  .report-card {
-    padding: 20px 16px;
-  }
-
-  .report-groups {
-    gap: 12px;
-  }
-
-  .report-group-title {
-    font-size: 15px;
-  }
-
-  .report-row {
-    font-size: 11.5px;
-    padding: 6px 8px;
-    gap: 6px;
-  }
-
-  .report-row-time,
-  .report-row-status {
-    font-size: 10px;
-  }
-
-  .report-totals {
-    gap: 10px;
-  }
-
-  .report-total-box {
-    padding: 12px 18px;
-    min-width: 90px;
-  }
-
-  .nav-btn {
-    padding: 12px 10px;
-    font-size: 12.5px;
-  }
-
-  .nav-player-info {
-    margin-left: 0;
-  }
-
-  .pi-list-header {
-    display: none;
-  }
-
-  .pi-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .pi-row span::before {
-    content: attr(data-label) ": ";
-    color: var(--gray);
-    font-family: var(--font-body);
-    font-weight: 600;
-  }
-
-  .playerinfo-panel {
-    padding: 20px 16px;
+// Re-run everything that depends on the currently viewed date / data.
+function refreshAll() {
+  updateStats();
+  updateHistoryBanner();
+  if (state.reportMode) {
+    renderReport();
+  } else {
+    renderGrid();
   }
 }
 
-@media (max-width: 420px) {
-  .datetime {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-  }
+function bindEvents() {
+  document.querySelector(".main-nav").addEventListener("click", onNavClick);
 
-  .header-top {
-    flex-wrap: nowrap;
-  }
+  dom.studentGrid.addEventListener("click", onGridClick);
+  dom.searchInput.addEventListener("input", onSearchInput);
+  dom.genderFilter.addEventListener("change", onGenderFilterChange);
+  dom.gradeFilter.addEventListener("change", onGradeFilterChange);
+  dom.sectionFilter.addEventListener("change", onSectionFilterChange);
+  dom.sortSelect.addEventListener("change", onSortChange);
+  dom.dateSelect.addEventListener("change", onDateSelectChange);
+  dom.backToTodayBtn.addEventListener("click", onBackToToday);
+  dom.lockToggleBtn.addEventListener("click", toggleLock);
+  dom.reportModeBtn.addEventListener("click", enterReportMode);
+  dom.exitReportBtn.addEventListener("click", exitReportMode);
+  dom.downloadReportBtn.addEventListener("click", downloadReportImage);
+
+  dom.piSportSelect.addEventListener("change", onPiSportChange);
+  dom.piSearchInput.addEventListener("input", onPiSearchInput);
 }
+
+async function init() {
+  state.lastKnownToday = todayKey();
+
+  populateFilterOptions();
+
+  dom.dateSelect.max = state.lastKnownToday;
+  dom.dateSelect.value = state.viewingDateKey;
+
+  updateLockButton();
+  bindEvents();
+  updateClock();
+
+  // Show a lightweight loading state while the initial fetch from
+  // Supabase is in flight, so the grid doesn't briefly flash "all absent".
+  dom.studentGrid.innerHTML = '<p class="empty-state">Loading attendance data…</p>';
+
+  await loadAllRecordsFromSupabase();
+  refreshAll();
+
+  // Stay in sync with every other device from now on.
+  subscribeToRealtimeUpdates();
+
+  // Live clock, ticking every second; also drives midnight rollover checks.
+  setInterval(updateClock, 1000);
+}
+
+document.addEventListener("DOMContentLoaded", init);

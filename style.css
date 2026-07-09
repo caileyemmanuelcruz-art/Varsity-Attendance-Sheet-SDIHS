@@ -969,7 +969,22 @@ main {
   }
 
   .report-groups {
-    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .report-group-title {
+    font-size: 15px;
+  }
+
+  .report-row {
+    font-size: 11.5px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .report-row-time,
+  .report-row-status {
+    font-size: 10px;
   }
 
   .report-totals {
