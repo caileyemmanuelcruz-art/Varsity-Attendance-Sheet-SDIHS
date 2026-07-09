@@ -232,6 +232,22 @@
         </div>
       </div>
 
+      <div class="pi-controls pi-filters-row hidden" id="piFiltersRow">
+        <select id="piGenderFilter" aria-label="Filter by gender">
+          <option value="all">All Genders</option>
+          <option value="Boy">Boys</option>
+          <option value="Girl">Girls</option>
+        </select>
+
+        <select id="piGradeFilter" aria-label="Filter by grade">
+          <option value="all">All Grades</option>
+        </select>
+
+        <select id="piSectionFilter" aria-label="Filter by section">
+          <option value="all">All Sections</option>
+        </select>
+      </div>
+
       <p id="piPlaceholder" class="pi-placeholder">Select a sport above to view player information.</p>
       <p id="piEmptySport" class="pi-placeholder hidden"></p>
 
@@ -243,6 +259,7 @@
           <span>Trainings held</span>
         </div>
         <div id="piList" class="pi-list"></div>
+        <p id="piEmptyFiltered" class="pi-placeholder hidden">No players match your search or filters.</p>
       </div>
     </div>
   </div>

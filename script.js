@@ -278,6 +278,9 @@ const state = {
   unlocked: false,              // coach edit privileges for this session
   piSport: "",                  // Player Information: selected sport
   piSearchTerm: "",
+  piGenderFilter: "all",
+  piGradeFilter: "all",
+  piSectionFilter: "all",
 };
 
 /* ==========================================================================
@@ -342,10 +345,15 @@ const dom = {
   piSportSelect: document.getElementById("piSportSelect"),
   piSearchWrap: document.getElementById("piSearchWrap"),
   piSearchInput: document.getElementById("piSearchInput"),
+  piFiltersRow: document.getElementById("piFiltersRow"),
+  piGenderFilter: document.getElementById("piGenderFilter"),
+  piGradeFilter: document.getElementById("piGradeFilter"),
+  piSectionFilter: document.getElementById("piSectionFilter"),
   piPlaceholder: document.getElementById("piPlaceholder"),
   piEmptySport: document.getElementById("piEmptySport"),
   piListWrap: document.getElementById("piListWrap"),
   piList: document.getElementById("piList"),
+  piEmptyFiltered: document.getElementById("piEmptyFiltered"),
 };
 
 /* ==========================================================================
@@ -681,6 +689,34 @@ function populateSectionOptions(gradeValue) {
   });
 }
 
+// Populate the Player Information Grade dropdown once, then keep its Section
+// dropdown in sync — same pattern as the main roster filters above.
+function populatePiFilterOptions() {
+  Object.keys(GRADE_SECTION_MAP).forEach((grade) => {
+    const opt = document.createElement("option");
+    opt.value = grade;
+    opt.textContent = `Grade ${grade}`;
+    dom.piGradeFilter.appendChild(opt);
+  });
+
+  populatePiSectionOptions("all");
+}
+
+function populatePiSectionOptions(gradeValue) {
+  dom.piSectionFilter.innerHTML = '<option value="all">All Sections</option>';
+
+  const sections = gradeValue === "all"
+    ? [...new Set(ROSTER.map((p) => p.section))].sort((a, b) => a.localeCompare(b))
+    : (GRADE_SECTION_MAP[gradeValue] || []);
+
+  sections.forEach((s) => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    dom.piSectionFilter.appendChild(opt);
+  });
+}
+
 function getFilteredSortedRoster() {
   let players = ROSTER.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(state.searchTerm.toLowerCase());
@@ -798,6 +834,23 @@ function onPiSearchInput(e) {
   renderPlayerInfo();
 }
 
+function onPiGenderFilterChange(e) {
+  state.piGenderFilter = e.target.value;
+  renderPlayerInfo();
+}
+
+function onPiGradeFilterChange(e) {
+  state.piGradeFilter = e.target.value;
+  state.piSectionFilter = "all";
+  populatePiSectionOptions(state.piGradeFilter);
+  renderPlayerInfo();
+}
+
+function onPiSectionFilterChange(e) {
+  state.piSectionFilter = e.target.value;
+  renderPlayerInfo();
+}
+
 function renderPlayerInfo() {
   const sport = state.piSport;
 
@@ -805,6 +858,7 @@ function renderPlayerInfo() {
     dom.piPlaceholder.classList.remove("hidden");
     dom.piEmptySport.classList.add("hidden");
     dom.piSearchWrap.classList.add("hidden");
+    dom.piFiltersRow.classList.add("hidden");
     dom.piListWrap.classList.add("hidden");
     return;
   }
@@ -813,32 +867,47 @@ function renderPlayerInfo() {
     const labels = { basketball: "Basketball", athletics: "Athletics", dance: "Cultural Dance Group" };
     dom.piPlaceholder.classList.add("hidden");
     dom.piSearchWrap.classList.add("hidden");
+    dom.piFiltersRow.classList.add("hidden");
     dom.piListWrap.classList.add("hidden");
     dom.piEmptySport.textContent = `No player data yet for ${labels[sport]} — it doesn't have a roster or attendance sheet set up.`;
     dom.piEmptySport.classList.remove("hidden");
     return;
   }
 
-  // Volleyball: show the searchable list with season totals.
+  // Volleyball: show the searchable, filterable list with season totals.
   dom.piPlaceholder.classList.add("hidden");
   dom.piEmptySport.classList.add("hidden");
   dom.piSearchWrap.classList.remove("hidden");
+  dom.piFiltersRow.classList.remove("hidden");
   dom.piListWrap.classList.remove("hidden");
 
   const seasonStats = computeAllSeasonStats();
   const term = state.piSearchTerm.toLowerCase();
   const players = ROSTER
-    .filter((p) => p.name.toLowerCase().includes(term))
+    .filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(term);
+      const matchesGender = state.piGenderFilter === "all" || p.gender === state.piGenderFilter;
+      const matchesGrade = state.piGradeFilter === "all" || String(p.grade) === state.piGradeFilter;
+      const matchesSection = state.piSectionFilter === "all" || p.section === state.piSectionFilter;
+      return matchesSearch && matchesGender && matchesGrade && matchesSection;
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  dom.piEmptyFiltered.classList.toggle("hidden", players.length > 0);
 
   dom.piList.innerHTML = players
     .map((p) => {
       const s = seasonStats[p.id];
+      const genderTagClass = p.gender === "Girl" ? "tag tag-girl" : "tag tag-boy";
+      const rowGenderClass = p.gender === "Girl" ? " pi-row-girl" : " pi-row-boy";
       return `
-        <div class="pi-row">
+        <div class="pi-row${rowGenderClass}">
           <span class="pi-row-name" data-label="Player">
             <strong>${escapeHtml(p.name)}</strong>
-            <small>${p.gender} · Grade ${p.grade} · ${escapeHtml(p.section)}</small>
+            <small>
+              <span class="${genderTagClass}">${p.gender}</span>
+              · Grade ${p.grade} · ${escapeHtml(p.section)}
+            </small>
           </span>
           <span class="pi-present" data-label="Present">${s.present}</span>
           <span class="pi-absent" data-label="Absent">${s.absent}</span>
@@ -1080,12 +1149,16 @@ function bindEvents() {
 
   dom.piSportSelect.addEventListener("change", onPiSportChange);
   dom.piSearchInput.addEventListener("input", onPiSearchInput);
+  dom.piGenderFilter.addEventListener("change", onPiGenderFilterChange);
+  dom.piGradeFilter.addEventListener("change", onPiGradeFilterChange);
+  dom.piSectionFilter.addEventListener("change", onPiSectionFilterChange);
 }
 
 async function init() {
   state.lastKnownToday = todayKey();
 
   populateFilterOptions();
+  populatePiFilterOptions();
 
   dom.dateSelect.max = state.lastKnownToday;
   dom.dateSelect.value = state.viewingDateKey;
