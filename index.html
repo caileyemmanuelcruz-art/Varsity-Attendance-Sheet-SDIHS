@@ -186,12 +186,147 @@
   <!-- ======================================================================
        PLACEHOLDER PAGES — other sports (attendance system coming later)
        ====================================================================== -->
-  <div id="page-basketball" class="page placeholder-page hidden">
-    <div class="placeholder-card">
-      <span class="placeholder-icon">🏀</span>
-      <h2>Basketball</h2>
-      <p>Basketball attendance tracking is coming soon. Once a roster is added here, it'll work exactly like Volleyball — daily sheets, history, and reports.</p>
+  <div id="page-basketball" class="page hidden">
+
+    <header class="app-header">
+      <div class="header-top">
+        <h1 class="app-title"><span class="ball">🏀</span> Basketball Training Attendance</h1>
+        <div class="datetime">
+          <span id="bbCurrentDate" class="current-date"></span>
+          <span id="bbCurrentTime" class="current-time"></span>
+        </div>
+      </div>
+
+      <div class="stats-bar" id="bbStatsBar">
+        <div class="stat-item">
+          <span class="stat-value" id="bbStatTotal">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item stat-present">
+          <span class="stat-value" id="bbStatPresent">0</span>
+          <span class="stat-label">Present</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item stat-absent">
+          <span class="stat-value" id="bbStatAbsent">0</span>
+          <span class="stat-label">Absent</span>
+        </div>
+      </div>
+      <p class="filter-summary" id="bbFilterSummary">Showing all 27 players</p>
+    </header>
+
+    <!-- ============ HISTORY / READ-ONLY BANNER ============ -->
+    <div id="bbHistoryBanner" class="history-banner hidden">
+      <span id="bbHistoryBannerText"></span>
+      <button id="bbBackToTodayBtn" class="btn-link">Back to today →</button>
     </div>
+
+    <!-- ============ CONTROLS (hidden in report mode) ============ -->
+    <section id="bbControlsSection" class="controls">
+
+      <div class="controls-row">
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search" id="bbSearchInput" placeholder="Search by student name..." aria-label="Search by student name">
+        </div>
+
+        <div class="date-wrap">
+          <label for="bbDateSelect" class="date-label">Viewing</label>
+          <input type="date" id="bbDateSelect" aria-label="Select attendance date">
+        </div>
+
+        <button id="bbLockToggleBtn" class="btn-lock locked" type="button">🔒 Locked</button>
+        <button id="bbReportModeBtn" class="btn-primary" type="button">📊 Report Mode</button>
+      </div>
+
+      <div class="controls-row filters-row">
+        <select id="bbGradeFilter" aria-label="Filter by grade">
+          <option value="all">All Grades</option>
+        </select>
+
+        <select id="bbSectionFilter" aria-label="Filter by section">
+          <option value="all">All Sections</option>
+        </select>
+
+        <select id="bbSortSelect" aria-label="Sort players">
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+          <option value="grade">Grade</option>
+          <option value="section">Section</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ============ STUDENT GRID ============ -->
+    <main id="bbMainView">
+      <div id="bbStudentGrid" class="student-grid"></div>
+      <p id="bbEmptyState" class="empty-state hidden">No players match your search or filters.</p>
+    </main>
+
+    <!-- ============ REPORT MODE (two pages, one full-width team list each) ============ -->
+    <section id="bbReportView" class="report-view hidden">
+      <div class="report-card">
+        <div class="report-header">
+          <h2 class="report-title"><span class="ball">🏀</span> Attendance Report</h2>
+          <div class="report-meta">
+            <span id="bbReportDate"></span>
+            <span class="report-meta-dot">•</span>
+            <span id="bbReportTime"></span>
+          </div>
+        </div>
+
+        <div class="report-totals" id="bbReportTotals">
+          <div class="report-total-box">
+            <span class="report-total-value" id="bbReportTotalAll">0</span>
+            <span class="report-total-label">Total Players</span>
+          </div>
+          <div class="report-total-box report-total-present">
+            <span class="report-total-value" id="bbReportTotalPresent">0</span>
+            <span class="report-total-label">Present</span>
+          </div>
+          <div class="report-total-box report-total-absent">
+            <span class="report-total-value" id="bbReportTotalAbsent">0</span>
+            <span class="report-total-label">Absent</span>
+          </div>
+        </div>
+
+        <div class="report-page-tabs" id="bbReportPageTabs">
+          <button class="report-page-tab active" data-page="page1" type="button">Page 1 <span class="report-page-tab-sub">(1–14)</span></button>
+          <button class="report-page-tab" data-page="page2" type="button">Page 2 <span class="report-page-tab-sub">(15–27)</span></button>
+        </div>
+
+        <div class="report-pages" id="bbReportPages">
+          <div class="report-page" id="bbReportPageOne">
+            <p class="report-page-label">Page 1 · Players 1–14</p>
+            <div class="report-groups report-groups-single">
+              <div class="report-group">
+                <h3 class="report-group-title">Team Attendance <span id="bbReportCountP1" class="report-group-count"></span></h3>
+                <div id="bbReportListP1" class="report-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-page hidden" id="bbReportPageTwo">
+            <p class="report-page-label">Page 2 · Players 15–27</p>
+            <div class="report-groups report-groups-single">
+              <div class="report-group">
+                <h3 class="report-group-title">Team Attendance <span id="bbReportCountP2" class="report-group-count"></span></h3>
+                <div id="bbReportListP2" class="report-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="report-download-note">One click downloads two separate photos — Page 1 and Page 2 — even though only one shows on screen at a time.</p>
+
+      <div class="report-actions">
+        <button id="bbDownloadReportBtn" class="btn-primary" type="button">⬇️ Download Report as Images</button>
+        <button id="bbExitReportBtn" class="btn-secondary" type="button">Exit Report Mode</button>
+      </div>
+    </section>
+
   </div>
 
   <div id="page-athletics" class="page placeholder-page hidden">
@@ -264,6 +399,50 @@
     </div>
   </div>
 
+</div>
+
+<!-- ======================================================================
+     HIDDEN TIMESTAMP EDITOR — password-gated, no visible trigger anywhere.
+     Reached only via a secret click gesture (see script.js). Lets you edit
+     one or many players' attendance times for any date at once.
+     ====================================================================== -->
+<div id="secretEditorOverlay" class="secret-overlay hidden">
+  <div class="secret-modal" role="dialog" aria-label="Edit attendance times">
+    <div class="secret-modal-header">
+      <h2>Edit Attendance Times</h2>
+      <button id="secretCloseBtn" class="secret-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <div class="secret-modal-body">
+      <div class="secret-field">
+        <label for="secretDateInput">Date</label>
+        <input type="date" id="secretDateInput">
+      </div>
+
+      <div class="secret-field secret-search-field">
+        <label for="secretPlayerSearch">Add a player</label>
+        <input type="text" id="secretPlayerSearch" placeholder="Type a name…" autocomplete="off">
+        <div id="secretSuggestions" class="secret-suggestions hidden"></div>
+      </div>
+
+      <div class="secret-field secret-common-row">
+        <label for="secretCommonTime">Common time</label>
+        <div class="secret-common-controls">
+          <input type="text" id="secretCommonTime" placeholder="e.g. 8:45 AM">
+          <button id="secretApplyCommonBtn" class="btn-secondary" type="button">Apply to all (stacked +5–10s)</button>
+        </div>
+        <p class="secret-hint">First player added gets exactly this time. Each player after that gets the one before them plus a random 5–10 seconds — so nobody ends up with an identical timestamp.</p>
+      </div>
+
+      <div id="secretPlayerList" class="secret-player-list"></div>
+      <p id="secretEmptyList" class="secret-empty">No players added yet — search above to add one.</p>
+    </div>
+
+    <div class="secret-modal-footer">
+      <button id="secretSaveBtn" class="btn-primary" type="button">Save All</button>
+      <button id="secretCancelBtn" class="btn-link" type="button">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

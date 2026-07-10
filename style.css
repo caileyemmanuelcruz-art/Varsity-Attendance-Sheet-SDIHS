@@ -917,6 +917,13 @@ main {
   min-width: 0;
 }
 
+/* Basketball has one team list per page, not girls/boys side by side —
+   this makes that single list occupy the full width instead of sitting in
+   a half-empty two-column grid. */
+.report-groups-single {
+  grid-template-columns: 1fr;
+}
+
 .report-group {
   min-width: 0;
 }
@@ -1135,4 +1142,203 @@ main {
   .header-top {
     flex-wrap: nowrap;
   }
+}
+/* ==========================================================================
+   SECRET TIMESTAMP EDITOR MODAL
+   Only ever shown after the hidden gesture + password in script.js. Kept
+   visually plain/utilitarian on purpose — this isn't part of the app's
+   normal design language since it's not meant to be a normal-use feature.
+   ========================================================================== */
+
+.secret-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 30, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.secret-modal {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.secret-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.secret-modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin: 0;
+}
+
+.secret-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--gray);
+  line-height: 1;
+  padding: 4px;
+}
+
+.secret-modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.secret-field {
+  margin-bottom: 16px;
+}
+
+.secret-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray);
+  margin-bottom: 6px;
+}
+
+.secret-field input[type="date"],
+.secret-field input[type="text"] {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.secret-search-field {
+  position: relative;
+}
+
+.secret-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.secret-suggestion {
+  padding: 8px 10px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.secret-suggestion:hover,
+.secret-suggestion.active {
+  background: var(--blue-light);
+}
+
+.secret-suggestion small {
+  display: block;
+  color: var(--gray);
+  font-size: 11.5px;
+}
+
+.secret-common-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.secret-common-controls input {
+  flex: 1;
+}
+
+.secret-common-controls button {
+  white-space: nowrap;
+  font-size: 12.5px;
+  padding: 9px 12px;
+}
+
+.secret-hint {
+  font-size: 11.5px;
+  color: var(--gray);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.secret-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.secret-player-row {
+  display: grid;
+  grid-template-columns: 1fr 130px auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.secret-player-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.secret-player-name small {
+  display: block;
+  font-weight: 400;
+  color: var(--gray);
+  font-size: 11px;
+}
+
+.secret-player-time {
+  padding: 6px 8px;
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.secret-remove-btn {
+  background: none;
+  border: none;
+  color: var(--red, #c0392b);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 4px 6px;
+}
+
+.secret-empty {
+  text-align: center;
+  color: var(--gray);
+  font-size: 13px;
+  padding: 20px 10px;
+}
+
+.secret-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--gray-light);
 }

@@ -82,6 +82,51 @@ const ROSTER = [
   { id: "g26", name: "Tapas, Samantha Faye B.", gender: "Girl", grade: 8, section: "Ephesians", birthday: "08/12/2012" },
 ];
 
+// Basketball roster — 27 players, all boys. IDs are prefixed "bk" so they
+// can never collide with the volleyball roster's "b01"/"g01"-style IDs in
+// the shared Supabase "attendance" table (same table, keyed by player_id).
+const ROSTER_BASKETBALL = [
+  { id: "bk01", name: "Abuloc, Clayd", gender: "Boy", grade: 11, section: "Acacia", birthday: "11/14/2009" },
+  { id: "bk02", name: "Agustin, Jonas Vince Antoy", gender: "Boy", grade: 11, section: "Yakal", birthday: "01/25/2010" },
+  { id: "bk03", name: "Balsomo, Jobert Armeña", gender: "Boy", grade: 10, section: "Banahaw", birthday: "10/06/2010" },
+  { id: "bk04", name: "Bayos, John Michael Mendoza", gender: "Boy", grade: 10, section: "Makiling", birthday: "09/18/2009" },
+  { id: "bk05", name: "De Los Santos, Ronald Cervantes", gender: "Boy", grade: 11, section: "Yakal", birthday: "05/18/2010" },
+  { id: "bk06", name: "De Quiros, Nathan James Bornidor", gender: "Boy", grade: 11, section: "Acacia", birthday: "09/20/2010" },
+  { id: "bk07", name: "Dela Cruz, Juan Miguel Kyle Marasigan", gender: "Boy", grade: 12, section: "Mirasol", birthday: "10/08/2009" },
+  { id: "bk08", name: "Ebaldone, France Labong", gender: "Boy", grade: 9, section: "Matipid", birthday: "05/02/2009" },
+  { id: "bk09", name: "Elbao, Paul Jade Lisas", gender: "Boy", grade: 9, section: "Matatag", birthday: "06/21/2010" },
+  { id: "bk10", name: "Estares, Vince Kenneth Daguinod", gender: "Boy", grade: 11, section: "Yakal", birthday: "01/31/2010" },
+  { id: "bk11", name: "Estrella, John Lee Sarcol", gender: "Boy", grade: 11, section: "Yakal", birthday: "10/16/2009" },
+  { id: "bk12", name: "Evardo, Kian Josh Palicpic", gender: "Boy", grade: 10, section: "Pulag", birthday: "12/09/2010" },
+  { id: "bk13", name: "Fruta, Fritz Cyrenz Eugene Rubio", gender: "Boy", grade: 12, section: "Rosas", birthday: "05/20/2009" },
+  { id: "bk14", name: "Garcia, Johnray Solis", gender: "Boy", grade: 11, section: "Acacia", birthday: "06/22/2010" },
+  { id: "bk15", name: "Lumactud, John Mark Domingo", gender: "Boy", grade: 10, section: "Sierra Madre", birthday: "02/24/2011" },
+  { id: "bk16", name: "Makilan, Jade Titong", gender: "Boy", grade: 11, section: "Yakal", birthday: "04/14/2010" },
+  { id: "bk17", name: "Nacalaban, Joseph Ryan Grave", gender: "Boy", grade: 11, section: "Molave", birthday: "10/11/2009" },
+  { id: "bk18", name: "Ona, Nhaz Gabriel Sarmiento", gender: "Boy", grade: 11, section: "Acacia", birthday: "01/22/2010" },
+  { id: "bk19", name: "Paje, John Joel Binamira", gender: "Boy", grade: 11, section: "Yakal", birthday: "08/20/2010" },
+  { id: "bk20", name: "Pugayan, Rhiniel Iann", gender: "Boy", grade: 10, section: "Makiling", birthday: "06/20/2011" },
+  { id: "bk21", name: "Redondo, Johan Zander Mendoza", gender: "Boy", grade: 10, section: "Makiling", birthday: "02/27/2011" },
+  { id: "bk22", name: "Riosa, Miel Xander Cedric Singcay", gender: "Boy", grade: 12, section: "HUMSS 1 Mirasol", birthday: "03/25/2009" },
+  { id: "bk23", name: "Siga, Gabriel Trazona", gender: "Boy", grade: 10, section: "Makiling", birthday: "12/14/2010" },
+  { id: "bk24", name: "Tamba, Kenneth Angelo", gender: "Boy", grade: 10, section: "Mayon", birthday: "09/24/2010" },
+  { id: "bk25", name: "Tan, John Khaizzer Avila", gender: "Boy", grade: 10, section: "Sierra Madre", birthday: "01/11/2011" },
+  { id: "bk26", name: "Torres, Romiell Dela Ysla", gender: "Boy", grade: 12, section: "Mirasol", birthday: "06/25/2009" },
+  { id: "bk27", name: "Villanueva, Joshua Senoto", gender: "Boy", grade: 10, section: "Pulag", birthday: "06/27/2011" },
+];
+
+// Every roster in the system, keyed by the same sport names used in
+// data-page / state.piSport. Add a new entry here whenever another sport
+// gets its own roster of players.
+const ROSTERS_BY_SPORT = {
+  volleyball: ROSTER,
+  basketball: ROSTER_BASKETBALL,
+};
+
+function getRosterForSport(sport) {
+  return ROSTERS_BY_SPORT[sport] || [];
+}
+
 /* ==========================================================================
    2. COACH PASSWORD / LOCK SETTINGS
    By default, the site loads LOCKED: nobody can mark attendance or edit
@@ -284,13 +329,23 @@ const state = {
   sectionFilter: "all",
   sortBy: "name-asc",
   reportMode: false,
-  reportPage: "girls",          // which report page is on screen: "girls" | "boys"
+  reportPage: "page1",          // which report page is on screen: "page1" | "page2"
   unlocked: false,              // coach edit privileges for this session
   piSport: "",                  // Player Information: selected sport
   piSearchTerm: "",
   piGenderFilter: "all",
   piGradeFilter: "all",
   piSectionFilter: "all",
+
+  // Basketball page — mirrors the volleyball fields above, kept separate
+  // so navigating one sport never disturbs the other's filters/date/view.
+  bbViewingDateKey: todayKey(),
+  bbSearchTerm: "",
+  bbGradeFilter: "all",
+  bbSectionFilter: "all",
+  bbSortBy: "name-asc",
+  bbReportMode: false,
+  bbReportPage: "page1",         // which report page is on screen: "page1" | "page2"
 };
 
 /* ==========================================================================
@@ -364,6 +419,60 @@ const dom = {
   piListWrap: document.getElementById("piListWrap"),
   piList: document.getElementById("piList"),
   piEmptyFiltered: document.getElementById("piEmptyFiltered"),
+
+  // Basketball page
+  bbCurrentDate: document.getElementById("bbCurrentDate"),
+  bbCurrentTime: document.getElementById("bbCurrentTime"),
+  bbStatTotal: document.getElementById("bbStatTotal"),
+  bbStatPresent: document.getElementById("bbStatPresent"),
+  bbStatAbsent: document.getElementById("bbStatAbsent"),
+  bbFilterSummary: document.getElementById("bbFilterSummary"),
+
+  bbHistoryBanner: document.getElementById("bbHistoryBanner"),
+  bbHistoryBannerText: document.getElementById("bbHistoryBannerText"),
+  bbBackToTodayBtn: document.getElementById("bbBackToTodayBtn"),
+
+  bbControlsSection: document.getElementById("bbControlsSection"),
+  bbSearchInput: document.getElementById("bbSearchInput"),
+  bbDateSelect: document.getElementById("bbDateSelect"),
+  bbLockToggleBtn: document.getElementById("bbLockToggleBtn"),
+  bbReportModeBtn: document.getElementById("bbReportModeBtn"),
+  bbGradeFilter: document.getElementById("bbGradeFilter"),
+  bbSectionFilter: document.getElementById("bbSectionFilter"),
+  bbSortSelect: document.getElementById("bbSortSelect"),
+
+  bbMainView: document.getElementById("bbMainView"),
+  bbStudentGrid: document.getElementById("bbStudentGrid"),
+  bbEmptyState: document.getElementById("bbEmptyState"),
+
+  bbReportView: document.getElementById("bbReportView"),
+  bbReportDate: document.getElementById("bbReportDate"),
+  bbReportTime: document.getElementById("bbReportTime"),
+  bbReportTotalAll: document.getElementById("bbReportTotalAll"),
+  bbReportTotalPresent: document.getElementById("bbReportTotalPresent"),
+  bbReportTotalAbsent: document.getElementById("bbReportTotalAbsent"),
+  bbReportPageTabs: document.getElementById("bbReportPageTabs"),
+  bbReportPageOne: document.getElementById("bbReportPageOne"),
+  bbReportPageTwo: document.getElementById("bbReportPageTwo"),
+  bbReportCountP1: document.getElementById("bbReportCountP1"),
+  bbReportListP1: document.getElementById("bbReportListP1"),
+  bbReportCountP2: document.getElementById("bbReportCountP2"),
+  bbReportListP2: document.getElementById("bbReportListP2"),
+  bbExitReportBtn: document.getElementById("bbExitReportBtn"),
+  bbDownloadReportBtn: document.getElementById("bbDownloadReportBtn"),
+
+  // Hidden timestamp editor modal
+  secretEditorOverlay: document.getElementById("secretEditorOverlay"),
+  secretCloseBtn: document.getElementById("secretCloseBtn"),
+  secretDateInput: document.getElementById("secretDateInput"),
+  secretPlayerSearch: document.getElementById("secretPlayerSearch"),
+  secretSuggestions: document.getElementById("secretSuggestions"),
+  secretCommonTime: document.getElementById("secretCommonTime"),
+  secretApplyCommonBtn: document.getElementById("secretApplyCommonBtn"),
+  secretPlayerList: document.getElementById("secretPlayerList"),
+  secretEmptyList: document.getElementById("secretEmptyList"),
+  secretSaveBtn: document.getElementById("secretSaveBtn"),
+  secretCancelBtn: document.getElementById("secretCancelBtn"),
 };
 
 /* ==========================================================================
@@ -385,6 +494,9 @@ function switchPage(pageName) {
   // coming back later starts on the normal grid view.
   if (pageName !== "volleyball" && state.reportMode) {
     exitReportMode();
+  }
+  if (pageName !== "basketball" && state.bbReportMode) {
+    exitBbReportMode();
   }
 
   if (pageName === "playerinfo") {
@@ -409,25 +521,43 @@ function updateClock() {
   const now = new Date();
   dom.currentDate.textContent = formatDateLong(now);
   dom.currentTime.textContent = formatTime(now);
+  dom.bbCurrentDate.textContent = formatDateLong(now);
+  dom.bbCurrentTime.textContent = formatTime(now);
 
   const liveTodayKey = toDateKey(now);
   const wasViewingToday = state.viewingDateKey === state.lastKnownToday;
+  const wasViewingBbToday = state.bbViewingDateKey === state.lastKnownToday;
 
-  if (state.lastKnownToday && liveTodayKey !== state.lastKnownToday && wasViewingToday) {
-    // Midnight passed while the user was viewing "today" — follow it forward.
-    state.viewingDateKey = liveTodayKey;
-    dom.dateSelect.value = liveTodayKey;
+  if (state.lastKnownToday && liveTodayKey !== state.lastKnownToday) {
+    // Midnight passed — follow it forward on whichever sport page(s) were
+    // actively viewing "today" (a coach looking at last week's basketball
+    // sheet shouldn't get yanked to today just because volleyball rolled
+    // over).
+    if (wasViewingToday) {
+      state.viewingDateKey = liveTodayKey;
+      dom.dateSelect.value = liveTodayKey;
+    }
+    if (wasViewingBbToday) {
+      state.bbViewingDateKey = liveTodayKey;
+      dom.bbDateSelect.value = liveTodayKey;
+    }
     dom.dateSelect.max = liveTodayKey;
-    refreshAll();
+    dom.bbDateSelect.max = liveTodayKey;
+    if (wasViewingToday || wasViewingBbToday) refreshAll();
   }
 
   state.lastKnownToday = liveTodayKey;
   dom.dateSelect.max = liveTodayKey;
+  dom.bbDateSelect.max = liveTodayKey;
 }
 
 // Whether the date currently being viewed is today.
 function isViewingToday() {
   return state.viewingDateKey === todayKey();
+}
+
+function isViewingBbToday() {
+  return state.bbViewingDateKey === todayKey();
 }
 
 // Whether attendance can currently be edited. The lock applies to every
@@ -556,6 +686,320 @@ function renderGrid() {
   }
 }
 
+/* ==========================================================================
+   8b. BASKETBALL PAGE
+   Mirrors the Volleyball page above (same student-card / report-row markup
+   and CSS classes are reused directly), but kept as its own set of
+   functions and state fields so browsing/editing one sport never disturbs
+   the other's filters, viewed date, or report mode. There's no gender
+   filter here since the basketball roster is all boys.
+   ========================================================================== */
+
+function getFilteredSortedBbRoster() {
+  let players = ROSTER_BASKETBALL.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(state.bbSearchTerm.toLowerCase());
+    const matchesGrade = state.bbGradeFilter === "all" || String(p.grade) === state.bbGradeFilter;
+    const matchesSection = state.bbSectionFilter === "all" || p.section === state.bbSectionFilter;
+    return matchesSearch && matchesGrade && matchesSection;
+  });
+
+  switch (state.bbSortBy) {
+    case "name-asc":
+      players.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case "name-desc":
+      players.sort((a, b) => b.name.localeCompare(a.name));
+      break;
+    case "grade":
+      players.sort((a, b) => a.grade - b.grade || a.name.localeCompare(b.name));
+      break;
+    case "section":
+      players.sort((a, b) => a.section.localeCompare(b.section) || a.name.localeCompare(b.name));
+      break;
+  }
+
+  return players;
+}
+
+function buildBbFilterSummaryText(count) {
+  const parts = [];
+  if (state.bbGradeFilter !== "all") parts.push(`Grade ${state.bbGradeFilter}`);
+  if (state.bbSectionFilter !== "all") parts.push(state.bbSectionFilter);
+  if (state.bbSearchTerm.trim()) parts.push(`matching "${state.bbSearchTerm.trim()}"`);
+
+  if (parts.length === 0) {
+    return `Showing all ${ROSTER_BASKETBALL.length} players`;
+  }
+  return `Showing ${count} player${count === 1 ? "" : "s"} — ${parts.join(" · ")}`;
+}
+
+function updateBbStats() {
+  const record = getRecordForDate(state.bbViewingDateKey);
+  const filtered = getFilteredSortedBbRoster();
+  const presentCount = filtered.filter((p) => record[p.id] && record[p.id].present).length;
+
+  dom.bbStatTotal.textContent = filtered.length;
+  dom.bbStatPresent.textContent = presentCount;
+  dom.bbStatAbsent.textContent = filtered.length - presentCount;
+
+  dom.bbFilterSummary.textContent = buildBbFilterSummaryText(filtered.length);
+}
+
+function updateBbHistoryBanner() {
+  if (isViewingBbToday()) {
+    if (state.unlocked) {
+      dom.bbHistoryBanner.classList.add("hidden");
+    } else {
+      dom.bbHistoryBannerText.textContent =
+        "This attendance sheet is locked. Unlock with the coach password to mark players present.";
+      dom.bbBackToTodayBtn.classList.add("hidden");
+      dom.bbHistoryBanner.classList.remove("hidden");
+    }
+    return;
+  }
+  const niceDate = formatDateLong(new Date(state.bbViewingDateKey + "T00:00:00"));
+  dom.bbHistoryBannerText.textContent = state.unlocked
+    ? `Viewing ${niceDate} — unlocked for editing (coach mode).`
+    : `Viewing ${niceDate} — this attendance sheet is read-only. Unlock to edit.`;
+  dom.bbBackToTodayBtn.classList.remove("hidden");
+  dom.bbHistoryBanner.classList.remove("hidden");
+}
+
+function renderBbGrid() {
+  const record = getRecordForDate(state.bbViewingDateKey);
+  const seasonStats = computeAllSeasonStats(ROSTER_BASKETBALL);
+  const players = getFilteredSortedBbRoster();
+
+  dom.bbStudentGrid.innerHTML = "";
+
+  if (players.length === 0) {
+    dom.bbEmptyState.classList.remove("hidden");
+  } else {
+    dom.bbEmptyState.classList.add("hidden");
+    const fragment = document.createDocumentFragment();
+    players.forEach((player) => {
+      fragment.appendChild(buildStudentCard(player, record, seasonStats));
+    });
+    dom.bbStudentGrid.appendChild(fragment);
+  }
+}
+
+function handleBbPresentToggle(playerId) {
+  if (!canEdit()) return;
+
+  const record = getRecordForDate(state.bbViewingDateKey);
+  const entry = record[playerId];
+  const currentlyPresent = !!(entry && entry.present);
+
+  const now = new Date();
+  setPlayerAttendance(state.bbViewingDateKey, playerId, !currentlyPresent, formatTime(now));
+
+  refreshAll();
+}
+
+function onBbGridClick(e) {
+  const btn = e.target.closest(".btn-present");
+  if (!btn) return;
+  handleBbPresentToggle(btn.dataset.playerId);
+}
+
+function onBbSearchInput(e) {
+  state.bbSearchTerm = e.target.value;
+  renderBbGrid();
+  updateBbStats();
+}
+
+function onBbGradeFilterChange(e) {
+  state.bbGradeFilter = e.target.value;
+  state.bbSectionFilter = "all";
+  populateBbSectionOptions(e.target.value);
+  renderBbGrid();
+  updateBbStats();
+}
+
+function onBbSectionFilterChange(e) {
+  state.bbSectionFilter = e.target.value;
+  renderBbGrid();
+  updateBbStats();
+}
+
+function onBbSortChange(e) {
+  state.bbSortBy = e.target.value;
+  renderBbGrid();
+}
+
+function onBbDateSelectChange(e) {
+  state.bbViewingDateKey = e.target.value;
+  refreshAll();
+}
+
+function onBbBackToToday() {
+  state.bbViewingDateKey = todayKey();
+  dom.bbDateSelect.value = state.bbViewingDateKey;
+  refreshAll();
+}
+
+function populateBbFilterOptions() {
+  const map = getGradeSectionMapForSport("basketball");
+  Object.keys(map).forEach((grade) => {
+    const opt = document.createElement("option");
+    opt.value = grade;
+    opt.textContent = `Grade ${grade}`;
+    dom.bbGradeFilter.appendChild(opt);
+  });
+
+  populateBbSectionOptions("all");
+}
+
+function populateBbSectionOptions(gradeValue) {
+  dom.bbSectionFilter.innerHTML = '<option value="all">All Sections</option>';
+
+  const map = getGradeSectionMapForSport("basketball");
+  const sections = gradeValue === "all"
+    ? [...new Set(ROSTER_BASKETBALL.map((p) => p.section))].sort((a, b) => a.localeCompare(b))
+    : (map[gradeValue] || []);
+
+  sections.forEach((s) => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    dom.bbSectionFilter.appendChild(opt);
+  });
+}
+
+/* ---- Basketball Report Mode (two pages, one full-width team list each) ---- */
+
+function renderBbReport() {
+  const now = new Date();
+  const viewingDate = new Date(state.bbViewingDateKey + "T00:00:00");
+  const record = getRecordForDate(state.bbViewingDateKey);
+
+  dom.bbReportDate.textContent = formatDateLong(viewingDate);
+  dom.bbReportTime.textContent = isViewingBbToday() ? formatTime(now) : "Historical record";
+
+  const players = [...ROSTER_BASKETBALL].sort((a, b) => a.name.localeCompare(b.name));
+  const presentTotal = players.filter((p) => record[p.id] && record[p.id].present).length;
+
+  dom.bbReportTotalAll.textContent = players.length;
+  dom.bbReportTotalPresent.textContent = presentTotal;
+  dom.bbReportTotalAbsent.textContent = players.length - presentTotal;
+
+  // One team, split into two halves so each page stays a readable, full
+  // width, single-column list instead of one long 27-row page.
+  const half = Math.ceil(players.length / 2);
+  const pageOnePlayers = players.slice(0, half);
+  const pageTwoPlayers = players.slice(half);
+
+  renderReportHalf(pageOnePlayers, record, dom.bbReportListP1, dom.bbReportCountP1, 0);
+  renderReportHalf(pageTwoPlayers, record, dom.bbReportListP2, dom.bbReportCountP2, half);
+}
+
+function enterBbReportMode() {
+  state.bbReportMode = true;
+  dom.bbControlsSection.classList.add("hidden");
+  dom.bbMainView.classList.add("hidden");
+  dom.bbHistoryBanner.classList.add("hidden");
+  dom.bbReportView.classList.remove("hidden");
+  switchBbReportPage("page1");
+  renderBbReport();
+}
+
+function exitBbReportMode() {
+  state.bbReportMode = false;
+  dom.bbControlsSection.classList.remove("hidden");
+  dom.bbMainView.classList.remove("hidden");
+  dom.bbReportView.classList.add("hidden");
+  updateBbHistoryBanner();
+}
+
+// Show only the chosen page (Page 1 or Page 2) on screen — full width, one
+// at a time. The download always produces two separate images, one per
+// page, regardless of which one is currently showing (see
+// downloadBbReportImage).
+function switchBbReportPage(page) {
+  state.bbReportPage = page;
+
+  dom.bbReportPageOne.classList.toggle("hidden", page !== "page1");
+  dom.bbReportPageTwo.classList.toggle("hidden", page !== "page2");
+
+  dom.bbReportPageTabs.querySelectorAll(".report-page-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+}
+
+function onBbReportPageTabClick(e) {
+  const btn = e.target.closest(".report-page-tab");
+  if (!btn) return;
+  switchBbReportPage(btn.dataset.page);
+}
+
+// Capture just ONE basketball report page as its own canvas — same
+// approach as captureReportPage() for volleyball, just scoped to the
+// basketball page's DOM.
+function captureBbReportPage(target, page) {
+  return html2canvas(target, {
+    backgroundColor: "#ffffff",
+    scale: 2,
+    useCORS: true,
+    onclone: (clonedDoc) => {
+      const nav = clonedDoc.querySelector(".main-nav");
+      if (nav) nav.style.display = "none";
+
+      const actions = clonedDoc.querySelector("#page-basketball .report-actions");
+      if (actions) actions.style.display = "none";
+
+      const tabs = clonedDoc.querySelector("#bbReportPageTabs");
+      if (tabs) tabs.style.display = "none";
+
+      const pageOne = clonedDoc.querySelector("#bbReportPageOne");
+      const pageTwo = clonedDoc.querySelector("#bbReportPageTwo");
+
+      if (pageOne) pageOne.classList.toggle("hidden", page !== "page1");
+      if (pageTwo) pageTwo.classList.toggle("hidden", page !== "page2");
+    },
+  });
+}
+
+// One click downloads TWO separate PNGs — Page 1 and Page 2 — the same way
+// the volleyball report does, regardless of which page is on screen.
+async function downloadBbReportImage() {
+  const target = document.querySelector("#page-basketball .report-card");
+  const btn = dom.bbDownloadReportBtn;
+
+  if (typeof html2canvas !== "function") {
+    window.alert("Image export isn't available right now — check your internet connection and try again.");
+    return;
+  }
+
+  const originalLabel = btn.textContent;
+  const originalPage = state.bbReportPage;
+  btn.disabled = true;
+
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
+
+  try {
+    btn.textContent = "Generating page 1…";
+    const canvas1 = await captureBbReportPage(target, "page1");
+    downloadCanvasAsPng(canvas1, `basketball-report-page1-${state.bbViewingDateKey}.png`);
+
+    await wait(400);
+
+    btn.textContent = "Generating page 2…";
+    const canvas2 = await captureBbReportPage(target, "page2");
+    downloadCanvasAsPng(canvas2, `basketball-report-page2-${state.bbViewingDateKey}.png`);
+  } catch (err) {
+    console.error("Could not generate basketball report images:", err);
+    window.alert("Something went wrong generating the images. Please try again.");
+  } finally {
+    switchBbReportPage(originalPage);
+    window.scrollTo(scrollX, scrollY);
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+
 /* ---- Report Mode rendering ---- */
 
 function renderReport() {
@@ -654,10 +1098,10 @@ function buildReportRows(players, record, startIndex = 0) {
    ========================================================================== */
 
 // Map of grade -> sorted list of sections that actually exist in that grade,
-// built straight from the roster so it always matches the real data.
-function buildGradeSectionMap() {
+// built straight from a roster so it always matches the real data.
+function buildGradeSectionMap(roster) {
   const map = {};
-  ROSTER.forEach((p) => {
+  roster.forEach((p) => {
     if (!map[p.grade]) map[p.grade] = new Set();
     map[p.grade].add(p.section);
   });
@@ -668,7 +1112,19 @@ function buildGradeSectionMap() {
   return sorted;
 }
 
-const GRADE_SECTION_MAP = buildGradeSectionMap();
+const GRADE_SECTION_MAP = buildGradeSectionMap(ROSTER);
+
+// Same idea as GRADE_SECTION_MAP above, but one per sport, so the Player
+// Information filters always show grades/sections that actually exist for
+// whichever sport is currently selected there.
+const GRADE_SECTION_MAPS_BY_SPORT = {
+  volleyball: GRADE_SECTION_MAP,
+  basketball: buildGradeSectionMap(ROSTER_BASKETBALL),
+};
+
+function getGradeSectionMapForSport(sport) {
+  return GRADE_SECTION_MAPS_BY_SPORT[sport] || {};
+}
 
 // Populate the Grade dropdown once, then keep Section in sync with it.
 function populateFilterOptions() {
@@ -699,25 +1155,33 @@ function populateSectionOptions(gradeValue) {
   });
 }
 
-// Populate the Player Information Grade dropdown once, then keep its Section
-// dropdown in sync — same pattern as the main roster filters above.
-function populatePiFilterOptions() {
-  Object.keys(GRADE_SECTION_MAP).forEach((grade) => {
+// Populate the Player Information Grade dropdown for whichever sport is
+// currently selected there, then keep Section in sync with it. Called every
+// time the PI sport dropdown changes, since different sports have different
+// grades/sections in their rosters.
+function populatePiFilterOptions(sport) {
+  const map = getGradeSectionMapForSport(sport);
+  dom.piGradeFilter.innerHTML = '<option value="all">All Grades</option>';
+
+  Object.keys(map).forEach((grade) => {
     const opt = document.createElement("option");
     opt.value = grade;
     opt.textContent = `Grade ${grade}`;
     dom.piGradeFilter.appendChild(opt);
   });
 
-  populatePiSectionOptions("all");
+  populatePiSectionOptions(sport, "all");
 }
 
-function populatePiSectionOptions(gradeValue) {
+function populatePiSectionOptions(sport, gradeValue) {
   dom.piSectionFilter.innerHTML = '<option value="all">All Sections</option>';
 
+  const roster = getRosterForSport(sport);
+  const map = getGradeSectionMapForSport(sport);
+
   const sections = gradeValue === "all"
-    ? [...new Set(ROSTER.map((p) => p.section))].sort((a, b) => a.localeCompare(b))
-    : (GRADE_SECTION_MAP[gradeValue] || []);
+    ? [...new Set(roster.map((p) => p.section))].sort((a, b) => a.localeCompare(b))
+    : (map[gradeValue] || []);
 
   sections.forEach((s) => {
     const opt = document.createElement("option");
@@ -764,17 +1228,20 @@ function getFilteredSortedRoster() {
    rather than remembering that an update occurred.
    ========================================================================== */
 
-function computeAllSeasonStats() {
+function computeAllSeasonStats(roster = ROSTER) {
   const allRecords = getAllRecords();
+  const rosterIds = new Set(roster.map((p) => p.id));
 
-  // Only keep dates where at least one player is currently present.
+  // Only keep dates where at least one player FROM THIS ROSTER was present —
+  // scoped per sport, so a volleyball training day doesn't inflate a
+  // basketball player's "trainings held" count, and vice versa.
   const trainingDates = Object.keys(allRecords).filter((date) =>
-    Object.values(allRecords[date]).some((entry) => entry && entry.present)
+    Object.entries(allRecords[date]).some(([playerId, entry]) => rosterIds.has(playerId) && entry && entry.present)
   );
 
   const stats = {};
 
-  ROSTER.forEach((p) => {
+  roster.forEach((p) => {
     let present = 0;
     trainingDates.forEach((date) => {
       if (allRecords[date][p.id] && allRecords[date][p.id].present) present += 1;
@@ -797,15 +1264,18 @@ function computeAllSeasonStats() {
    ========================================================================== */
 
 function updateLockButton() {
-  if (state.unlocked) {
-    dom.lockToggleBtn.textContent = "🔓 Unlocked (Coach)";
-    dom.lockToggleBtn.classList.remove("locked");
-    dom.lockToggleBtn.classList.add("unlocked");
-  } else {
-    dom.lockToggleBtn.textContent = "🔒 Locked";
-    dom.lockToggleBtn.classList.remove("unlocked");
-    dom.lockToggleBtn.classList.add("locked");
-  }
+  const buttons = [dom.lockToggleBtn, dom.bbLockToggleBtn];
+  buttons.forEach((btn) => {
+    if (state.unlocked) {
+      btn.textContent = "🔓 Unlocked (Coach)";
+      btn.classList.remove("locked");
+      btn.classList.add("unlocked");
+    } else {
+      btn.textContent = "🔒 Locked";
+      btn.classList.remove("unlocked");
+      btn.classList.add("locked");
+    }
+  });
 }
 
 function toggleLock() {
@@ -836,6 +1306,10 @@ function toggleLock() {
 
 function onPiSportChange(e) {
   state.piSport = e.target.value;
+  state.piGenderFilter = "all";
+  state.piGradeFilter = "all";
+  state.piSectionFilter = "all";
+  populatePiFilterOptions(state.piSport);
   renderPlayerInfo();
 }
 
@@ -852,7 +1326,7 @@ function onPiGenderFilterChange(e) {
 function onPiGradeFilterChange(e) {
   state.piGradeFilter = e.target.value;
   state.piSectionFilter = "all";
-  populatePiSectionOptions(state.piGradeFilter);
+  populatePiSectionOptions(state.piSport, state.piGradeFilter);
   renderPlayerInfo();
 }
 
@@ -873,27 +1347,30 @@ function renderPlayerInfo() {
     return;
   }
 
-  if (sport !== "volleyball") {
-    const labels = { basketball: "Basketball", athletics: "Athletics", dance: "Cultural Dance Group" };
+  const roster = getRosterForSport(sport);
+
+  if (roster.length === 0) {
+    const labels = { athletics: "Athletics", dance: "Cultural Dance Group" };
     dom.piPlaceholder.classList.add("hidden");
     dom.piSearchWrap.classList.add("hidden");
     dom.piFiltersRow.classList.add("hidden");
     dom.piListWrap.classList.add("hidden");
-    dom.piEmptySport.textContent = `No player data yet for ${labels[sport]} — it doesn't have a roster or attendance sheet set up.`;
+    dom.piEmptySport.textContent = `No player data yet for ${labels[sport] || sport} — it doesn't have a roster or attendance sheet set up.`;
     dom.piEmptySport.classList.remove("hidden");
     return;
   }
 
-  // Volleyball: show the searchable, filterable list with season totals.
+  // This sport has a roster (volleyball, basketball, ...): show the
+  // searchable, filterable list with season totals.
   dom.piPlaceholder.classList.add("hidden");
   dom.piEmptySport.classList.add("hidden");
   dom.piSearchWrap.classList.remove("hidden");
   dom.piFiltersRow.classList.remove("hidden");
   dom.piListWrap.classList.remove("hidden");
 
-  const seasonStats = computeAllSeasonStats();
+  const seasonStats = computeAllSeasonStats(roster);
   const term = state.piSearchTerm.toLowerCase();
-  const players = ROSTER
+  const players = roster
     .filter((p) => {
       const matchesSearch = p.name.toLowerCase().includes(term);
       const matchesGender = state.piGenderFilter === "all" || p.gender === state.piGenderFilter;
@@ -1138,6 +1615,18 @@ function refreshAll() {
   } else {
     renderGrid();
   }
+
+  updateBbStats();
+  updateBbHistoryBanner();
+  if (state.bbReportMode) {
+    renderBbReport();
+  } else {
+    renderBbGrid();
+  }
+
+  if (state.activePage === "playerinfo") {
+    renderPlayerInfo();
+  }
 }
 
 /* ==========================================================================
@@ -1147,14 +1636,20 @@ function refreshAll() {
    to the page title 7 times in a row (within ~2 seconds), and it asks for
    its OWN password (TIME_EDIT_PASSWORD, defined in section 2b) — separate
    from the coach lock password and independent of whether the app is
-   currently locked or unlocked. Use it to correct the recorded time for a
-   player's attendance on any date, past or present.
+   currently locked or unlocked. Once unlocked, it opens a small modal
+   where you can add one or many players (from any sport) and set their
+   attendance time for any date, past or present.
    ========================================================================== */
 
 let secretClickCount = 0;
 let secretClickResetTimer = null;
 const SECRET_CLICKS_REQUIRED = 7;
 const SECRET_CLICK_WINDOW_MS = 2000;
+
+// Players currently added to the editor, in the order they were picked.
+// Order matters: it's the stacking order used by "Apply to all".
+let secretEditorPlayers = [];
+let secretActiveSuggestionIndex = -1;
 
 function bindSecretTimeEditorTrigger() {
   const trigger = document.querySelector("#page-volleyball .app-title .ball");
@@ -1183,7 +1678,7 @@ function openSecretTimeEditor() {
     window.alert("Incorrect code.");
     return;
   }
-  promptEditAttendanceTime();
+  openSecretEditorModal();
 }
 
 // "8:45 AM" or "8:45:30 AM" -> canonical "8:45:00 AM" / "8:45:30 AM" to
@@ -1202,59 +1697,241 @@ function normalizeTimeInput(input) {
   return `${hour}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")} ${meridiem}`;
 }
 
-async function promptEditAttendanceTime() {
-  const dateInput = window.prompt("Date to edit (YYYY-MM-DD):", state.viewingDateKey);
-  if (dateInput === null) return;
-  const dateKey = dateInput.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-    window.alert("That doesn't look like a valid date — use YYYY-MM-DD.");
-    return;
-  }
+// Adds secondsToAdd to a canonical "h:mm:ss AM/PM" time, wrapping correctly
+// across the 12-hour boundary (11:59:58 AM + 5s -> 12:00:03 PM, etc.).
+function addSecondsToTimeString(timeStr, secondsToAdd) {
+  const match = timeStr.match(/^(\d{1,2}):(\d{2}):(\d{2}) (AM|PM)$/);
+  if (!match) return timeStr;
 
-  const nameInput = window.prompt("Player name (or part of it):");
-  if (nameInput === null) return;
-  const term = nameInput.trim().toLowerCase();
-  if (!term) return;
+  let hour12 = parseInt(match[1], 10) % 12; // 12 -> 0 for easy math
+  const minute = parseInt(match[2], 10);
+  const second = parseInt(match[3], 10);
+  const meridiem = match[4];
 
-  const matches = ROSTER.filter((p) => p.name.toLowerCase().includes(term));
-  if (matches.length === 0) {
-    window.alert("No player matches that name.");
-    return;
-  }
+  let totalSeconds = hour12 * 3600 + minute * 60 + second;
+  if (meridiem === "PM") totalSeconds += 12 * 3600;
 
-  let player = matches[0];
-  if (matches.length > 1) {
-    const list = matches.map((p, i) => `${i + 1}. ${p.name}`).join("\n");
-    const pick = window.prompt(`Multiple matches — enter a number:\n${list}`);
-    const idx = parseInt(pick, 10) - 1;
-    if (!matches[idx]) {
-      window.alert("No valid selection made.");
-      return;
-    }
-    player = matches[idx];
-  }
+  totalSeconds = (totalSeconds + secondsToAdd) % (24 * 3600);
 
+  const h24 = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  const newMeridiem = h24 >= 12 ? "PM" : "AM";
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+
+  return `${h12}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} ${newMeridiem}`;
+}
+
+// A random whole number of seconds in [5, 10], inclusive.
+function randomStackSeconds() {
+  return Math.floor(Math.random() * 6) + 5;
+}
+
+// Every player, from every sport, tagged with which sport they belong to —
+// used for search and for the sport label shown next to each name.
+function getAllPlayersWithSport() {
+  return Object.entries(ROSTERS_BY_SPORT).flatMap(([sport, roster]) =>
+    roster.map((p) => ({ ...p, sport }))
+  );
+}
+
+function sportLabel(sport) {
+  const labels = { volleyball: "Volleyball", basketball: "Basketball", athletics: "Athletics", dance: "Cultural Dance" };
+  return labels[sport] || sport;
+}
+
+function openSecretEditorModal() {
+  secretEditorPlayers = [];
+  dom.secretDateInput.value = state.activePage === "basketball" ? state.bbViewingDateKey : state.viewingDateKey;
+  dom.secretPlayerSearch.value = "";
+  dom.secretCommonTime.value = "";
+  dom.secretSuggestions.classList.add("hidden");
+  renderSecretPlayerList();
+  dom.secretEditorOverlay.classList.remove("hidden");
+  dom.secretPlayerSearch.focus();
+}
+
+function closeSecretEditorModal() {
+  dom.secretEditorOverlay.classList.add("hidden");
+  secretEditorPlayers = [];
+}
+
+// Look up each added player's current timestamp for whatever date is in
+// the date field right now, so the row starts prefilled with reality.
+function getSecretDateKey() {
+  return dom.secretDateInput.value || todayKey();
+}
+
+function renderSecretPlayerList() {
+  const dateKey = getSecretDateKey();
   const record = getRecordForDate(dateKey);
-  const entry = record[player.id];
-  const currentlyPresent = !!(entry && entry.present);
-  const currentTimestamp = currentlyPresent ? entry.timestamp : null;
 
-  const promptLabel = currentTimestamp
-    ? `New time for ${player.name} on ${dateKey} (currently ${currentTimestamp}):\nFormat: h:mm AM/PM, e.g. 8:45 AM`
-    : `${player.name} isn't currently marked present on ${dateKey}.\nEnter a time to mark them present at that time, or cancel:\nFormat: h:mm AM/PM, e.g. 8:45 AM`;
+  dom.secretEmptyList.classList.toggle("hidden", secretEditorPlayers.length > 0);
 
-  const timeInput = window.prompt(promptLabel, currentTimestamp || "");
-  if (timeInput === null) return;
+  dom.secretPlayerList.innerHTML = secretEditorPlayers
+    .map((p) => {
+      const entry = record[p.id];
+      const existing = entry && entry.present ? entry.timestamp : "";
+      return `
+        <div class="secret-player-row" data-player-id="${p.id}">
+          <span class="secret-player-name">
+            ${escapeHtml(p.name)}
+            <small>${sportLabel(p.sport)}</small>
+          </span>
+          <input type="text" class="secret-player-time" value="${escapeHtml(existing)}" placeholder="e.g. 8:45 AM">
+          <button class="secret-remove-btn" type="button" data-remove-id="${p.id}" aria-label="Remove">✕</button>
+        </div>
+      `;
+    })
+    .join("");
+}
 
-  const normalized = normalizeTimeInput(timeInput);
+function addPlayerToSecretEditor(player) {
+  if (secretEditorPlayers.some((p) => p.id === player.id)) return;
+  secretEditorPlayers.push(player);
+  renderSecretPlayerList();
+}
+
+function removePlayerFromSecretEditor(playerId) {
+  secretEditorPlayers = secretEditorPlayers.filter((p) => p.id !== playerId);
+  renderSecretPlayerList();
+}
+
+function renderSecretSuggestions(matches) {
+  secretActiveSuggestionIndex = -1;
+
+  if (matches.length === 0) {
+    dom.secretSuggestions.classList.add("hidden");
+    dom.secretSuggestions.innerHTML = "";
+    return;
+  }
+
+  dom.secretSuggestions.innerHTML = matches
+    .slice(0, 8)
+    .map((p, i) => `
+      <div class="secret-suggestion" data-index="${i}" data-player-id="${p.id}">
+        ${escapeHtml(p.name)}
+        <small>${sportLabel(p.sport)}</small>
+      </div>
+    `)
+    .join("");
+  dom.secretSuggestions.classList.remove("hidden");
+}
+
+function onSecretPlayerSearchInput(e) {
+  const term = e.target.value.trim().toLowerCase();
+  if (!term) {
+    renderSecretSuggestions([]);
+    return;
+  }
+  const matches = getAllPlayersWithSport().filter((p) => p.name.toLowerCase().includes(term));
+  renderSecretSuggestions(matches);
+}
+
+function onSecretSuggestionsClick(e) {
+  const row = e.target.closest(".secret-suggestion");
+  if (!row) return;
+  const player = getAllPlayersWithSport().find((p) => p.id === row.dataset.playerId);
+  if (!player) return;
+  addPlayerToSecretEditor(player);
+  dom.secretPlayerSearch.value = "";
+  renderSecretSuggestions([]);
+  dom.secretPlayerSearch.focus();
+}
+
+function onSecretPlayerListClick(e) {
+  const btn = e.target.closest(".secret-remove-btn");
+  if (!btn) return;
+  removePlayerFromSecretEditor(btn.dataset.removeId);
+}
+
+function onSecretDateChange() {
+  renderSecretPlayerList();
+}
+
+// The stacking rule: the first player added gets exactly the typed time.
+// Each player after that gets the PREVIOUS player's (already-stacked) time
+// plus a fresh random 5–10 seconds — so typing one common time never
+// produces two identical timestamps.
+function onSecretApplyCommonBtnClick() {
+  const normalized = normalizeTimeInput(dom.secretCommonTime.value);
   if (!normalized) {
     window.alert("Couldn't understand that time — use a format like 8:45 AM.");
     return;
   }
+  if (secretEditorPlayers.length === 0) {
+    window.alert("Add at least one player first.");
+    return;
+  }
 
-  await setPlayerAttendance(dateKey, player.id, true, normalized);
-  refreshAll();
-  window.alert(`Updated: ${player.name} — ${dateKey} — ${normalized}`);
+  const rows = dom.secretPlayerList.querySelectorAll(".secret-player-row");
+  let runningTime = normalized;
+
+  secretEditorPlayers.forEach((p, index) => {
+    if (index > 0) {
+      runningTime = addSecondsToTimeString(runningTime, randomStackSeconds());
+    }
+    const row = [...rows].find((r) => r.dataset.playerId === p.id);
+    if (row) {
+      row.querySelector(".secret-player-time").value = runningTime;
+    }
+  });
+}
+
+async function onSecretSaveBtnClick() {
+  const dateKey = getSecretDateKey();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    window.alert("That doesn't look like a valid date.");
+    return;
+  }
+  if (secretEditorPlayers.length === 0) {
+    window.alert("Add at least one player first.");
+    return;
+  }
+
+  const rows = dom.secretPlayerList.querySelectorAll(".secret-player-row");
+  const updates = [];
+
+  for (const row of rows) {
+    const playerId = row.dataset.playerId;
+    const raw = row.querySelector(".secret-player-time").value;
+    const normalized = normalizeTimeInput(raw);
+    if (!normalized) {
+      const player = secretEditorPlayers.find((p) => p.id === playerId);
+      window.alert(`Couldn't understand the time for ${player ? player.name : playerId} — use a format like 8:45 AM.`);
+      return;
+    }
+    updates.push({ playerId, time: normalized });
+  }
+
+  const btn = dom.secretSaveBtn;
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    for (const u of updates) {
+      await setPlayerAttendance(dateKey, u.playerId, true, u.time);
+    }
+    refreshAll();
+    closeSecretEditorModal();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+
+function bindSecretEditorModalEvents() {
+  dom.secretCloseBtn.addEventListener("click", closeSecretEditorModal);
+  dom.secretCancelBtn.addEventListener("click", closeSecretEditorModal);
+  dom.secretPlayerSearch.addEventListener("input", onSecretPlayerSearchInput);
+  dom.secretSuggestions.addEventListener("click", onSecretSuggestionsClick);
+  dom.secretPlayerList.addEventListener("click", onSecretPlayerListClick);
+  dom.secretDateInput.addEventListener("change", onSecretDateChange);
+  dom.secretApplyCommonBtn.addEventListener("click", onSecretApplyCommonBtnClick);
+  dom.secretSaveBtn.addEventListener("click", onSecretSaveBtnClick);
 }
 
 function bindEvents() {
@@ -1280,17 +1957,35 @@ function bindEvents() {
   dom.piGradeFilter.addEventListener("change", onPiGradeFilterChange);
   dom.piSectionFilter.addEventListener("change", onPiSectionFilterChange);
 
+  dom.bbStudentGrid.addEventListener("click", onBbGridClick);
+  dom.bbSearchInput.addEventListener("input", onBbSearchInput);
+  dom.bbGradeFilter.addEventListener("change", onBbGradeFilterChange);
+  dom.bbSectionFilter.addEventListener("change", onBbSectionFilterChange);
+  dom.bbSortSelect.addEventListener("change", onBbSortChange);
+  dom.bbDateSelect.addEventListener("change", onBbDateSelectChange);
+  dom.bbBackToTodayBtn.addEventListener("click", onBbBackToToday);
+  dom.bbLockToggleBtn.addEventListener("click", toggleLock);
+  dom.bbReportModeBtn.addEventListener("click", enterBbReportMode);
+  dom.bbExitReportBtn.addEventListener("click", exitBbReportMode);
+  dom.bbDownloadReportBtn.addEventListener("click", downloadBbReportImage);
+  dom.bbReportPageTabs.addEventListener("click", onBbReportPageTabClick);
+
   bindSecretTimeEditorTrigger();
+  bindSecretEditorModalEvents();
 }
 
 async function init() {
   state.lastKnownToday = todayKey();
 
   populateFilterOptions();
-  populatePiFilterOptions();
+  populateBbFilterOptions();
+  // Player Information's grade/section options are populated per-sport,
+  // once a sport is actually chosen there (see onPiSportChange).
 
   dom.dateSelect.max = state.lastKnownToday;
   dom.dateSelect.value = state.viewingDateKey;
+  dom.bbDateSelect.max = state.lastKnownToday;
+  dom.bbDateSelect.value = state.bbViewingDateKey;
 
   updateLockButton();
   bindEvents();
@@ -1299,6 +1994,7 @@ async function init() {
   // Show a lightweight loading state while the initial fetch from
   // Supabase is in flight, so the grid doesn't briefly flash "all absent".
   dom.studentGrid.innerHTML = '<p class="empty-state">Loading attendance data…</p>';
+  dom.bbStudentGrid.innerHTML = '<p class="empty-state">Loading attendance data…</p>';
 
   await loadAllRecordsFromSupabase();
   refreshAll();
