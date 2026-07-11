@@ -465,8 +465,9 @@ const dom = {
   secretEditorOverlay: document.getElementById("secretEditorOverlay"),
   secretCloseBtn: document.getElementById("secretCloseBtn"),
   secretDateInput: document.getElementById("secretDateInput"),
-  secretPlayerSearch: document.getElementById("secretPlayerSearch"),
-  secretSuggestions: document.getElementById("secretSuggestions"),
+  secretSportToggle: document.getElementById("secretSportToggle"),
+  secretGenderToggle: document.getElementById("secretGenderToggle"),
+  secretBrowseList: document.getElementById("secretBrowseList"),
   secretCommonTime: document.getElementById("secretCommonTime"),
   secretApplyCommonBtn: document.getElementById("secretApplyCommonBtn"),
   secretPlayerList: document.getElementById("secretPlayerList"),
@@ -890,8 +891,8 @@ function renderBbReport() {
   const pageOnePlayers = players.slice(0, half);
   const pageTwoPlayers = players.slice(half);
 
-  renderReportHalf(pageOnePlayers, record, dom.bbReportListP1, dom.bbReportCountP1, 0);
-  renderReportHalf(pageTwoPlayers, record, dom.bbReportListP2, dom.bbReportCountP2, half);
+  renderReportHalf(pageOnePlayers, record, dom.bbReportListP1, dom.bbReportCountP1, 0, presentTotal, players.length);
+  renderReportHalf(pageTwoPlayers, record, dom.bbReportListP2, dom.bbReportCountP2, half, presentTotal, players.length);
 }
 
 function enterBbReportMode() {
@@ -1018,9 +1019,17 @@ function renderReport() {
   dom.reportTotalPresent.textContent = presentTotal;
   dom.reportTotalAbsent.textContent = ROSTER.length - presentTotal;
 
+  // Whole-roster present counts per gender (not just this page's half) —
+  // the header next to "Girls Attendance" / "Boys Attendance" shows this,
+  // e.g. "8/26", so it always reflects the full team regardless of which
+  // page you're looking at.
+  const girlsPresentTotal = girls.filter((p) => record[p.id] && record[p.id].present).length;
+  const boysPresentTotal = boys.filter((p) => record[p.id] && record[p.id].present).length;
+
   // Split each gender list into two halves (13 + 13 for a 26-player roster,
   // but this works for any count) so each page shows half the girls and
-  // half the boys, side by side — instead of one page per gender.
+  // half the boys, side by side. Each row is also tinted gold/blue by
+  // gender (see buildReportRows) as an extra visual cue.
   const girlsHalf = Math.ceil(girls.length / 2);
   const boysHalf = Math.ceil(boys.length / 2);
 
@@ -1029,17 +1038,20 @@ function renderReport() {
   const boysP1 = boys.slice(0, boysHalf);
   const boysP2 = boys.slice(boysHalf);
 
-  renderReportHalf(girlsP1, record, dom.reportGirlsListP1, dom.reportGirlsCountP1, 0);
-  renderReportHalf(boysP1, record, dom.reportBoysListP1, dom.reportBoysCountP1, 0);
-  renderReportHalf(girlsP2, record, dom.reportGirlsListP2, dom.reportGirlsCountP2, girlsHalf);
-  renderReportHalf(boysP2, record, dom.reportBoysListP2, dom.reportBoysCountP2, boysHalf);
+  renderReportHalf(girlsP1, record, dom.reportGirlsListP1, dom.reportGirlsCountP1, 0, girlsPresentTotal, girls.length);
+  renderReportHalf(boysP1, record, dom.reportBoysListP1, dom.reportBoysCountP1, 0, boysPresentTotal, boys.length);
+  renderReportHalf(girlsP2, record, dom.reportGirlsListP2, dom.reportGirlsCountP2, girlsHalf, girlsPresentTotal, girls.length);
+  renderReportHalf(boysP2, record, dom.reportBoysListP2, dom.reportBoysCountP2, boysHalf, boysPresentTotal, boys.length);
 }
 
 // Renders one gender's half-list into one page, with row numbers continuing
-// on from the first half (e.g. Page 2 starts at 14, not back at 1).
-function renderReportHalf(players, record, listEl, countEl, startIndex) {
-  const presentCount = players.filter((p) => record[p.id] && record[p.id].present).length;
-  countEl.textContent = `${presentCount}/${players.length} present`;
+// on from the first half (e.g. Page 2 starts at 14, not back at 1). The
+// count shown next to the group heading is the WHOLE team's present count
+// (wholePresent/wholeTotal, e.g. "8/26") — the same on both pages — not
+// just how many of this half are present, since that's what's actually
+// useful to see at a glance.
+function renderReportHalf(players, record, listEl, countEl, startIndex, wholePresent, wholeTotal) {
+  countEl.textContent = `${wholePresent}/${wholeTotal}`;
   listEl.innerHTML = buildReportRows(players, record, startIndex);
 }
 
@@ -1066,17 +1078,20 @@ function splitTimestampForReport(timestamp) {
 }
 
 // startIndex lets the second half of a list continue numbering from where
-// the first half left off (e.g. 1–13 on Page 1, 14–26 on Page 2), since
-// "players" here is already just that page's slice of the full list.
+// the first half left off (e.g. 1–26 on Page 1, 27–52 on Page 2), since
+// "players" here is already just that page's slice of the full list. Each
+// row is tinted gold (girls) or blue (boys) via its "gender-*" class so
+// gender reads at a glance without needing separate sections.
 function buildReportRows(players, record, startIndex = 0) {
   return players
     .map((p, index) => {
       const entry = record[p.id];
       const isPresent = !!(entry && entry.present);
       const { time, meridiem } = isPresent ? splitTimestampForReport(entry.timestamp) : { time: "", meridiem: "" };
+      const genderClass = p.gender === "Girl" ? "gender-girl" : "gender-boy";
 
       return `
-        <div class="report-row ${isPresent ? "present" : ""}">
+        <div class="report-row ${genderClass} ${isPresent ? "present" : ""}">
           <div class="report-row-top">
             <span class="report-row-index">${startIndex + index + 1}.</span>
             <span class="report-row-name">${escapeHtml(shortenNameForReport(p.name))}</span>
@@ -1649,7 +1664,10 @@ const SECRET_CLICK_WINDOW_MS = 2000;
 // Players currently added to the editor, in the order they were picked.
 // Order matters: it's the stacking order used by "Apply to all".
 let secretEditorPlayers = [];
-let secretActiveSuggestionIndex = -1;
+
+// Which sport + gender the browsable player list is currently showing.
+let secretBrowseSport = "volleyball";
+let secretBrowseGender = "Boy";
 
 function bindSecretTimeEditorTrigger() {
   const trigger = document.querySelector("#page-volleyball .app-title .ball");
@@ -1744,13 +1762,22 @@ function sportLabel(sport) {
 
 function openSecretEditorModal() {
   secretEditorPlayers = [];
+  secretBrowseSport = "volleyball";
+  secretBrowseGender = "Boy";
+
   dom.secretDateInput.value = state.activePage === "basketball" ? state.bbViewingDateKey : state.viewingDateKey;
-  dom.secretPlayerSearch.value = "";
   dom.secretCommonTime.value = "";
-  dom.secretSuggestions.classList.add("hidden");
+
+  dom.secretSportToggle.querySelectorAll(".secret-toggle-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.sport === secretBrowseSport);
+  });
+  dom.secretGenderToggle.querySelectorAll(".secret-toggle-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.gender === secretBrowseGender);
+  });
+
   renderSecretPlayerList();
+  renderSecretBrowseList();
   dom.secretEditorOverlay.classList.remove("hidden");
-  dom.secretPlayerSearch.focus();
 }
 
 function closeSecretEditorModal() {
@@ -1792,53 +1819,81 @@ function addPlayerToSecretEditor(player) {
   if (secretEditorPlayers.some((p) => p.id === player.id)) return;
   secretEditorPlayers.push(player);
   renderSecretPlayerList();
+  renderSecretBrowseList();
 }
 
 function removePlayerFromSecretEditor(playerId) {
   secretEditorPlayers = secretEditorPlayers.filter((p) => p.id !== playerId);
   renderSecretPlayerList();
+  renderSecretBrowseList();
 }
 
-function renderSecretSuggestions(matches) {
-  secretActiveSuggestionIndex = -1;
+// The full roster for whichever sport + gender toggle is currently active,
+// each row showing that player's existing time for the selected date (or
+// "Not marked"). Tapping a row adds the player; tapping it again removes
+// them — no typing required.
+function renderSecretBrowseList() {
+  const dateKey = getSecretDateKey();
+  const record = getRecordForDate(dateKey);
+  const roster = getRosterForSport(secretBrowseSport).filter((p) => p.gender === secretBrowseGender);
+  const sorted = [...roster].sort((a, b) => a.name.localeCompare(b.name));
 
-  if (matches.length === 0) {
-    dom.secretSuggestions.classList.add("hidden");
-    dom.secretSuggestions.innerHTML = "";
+  if (sorted.length === 0) {
+    const genderWord = secretBrowseGender === "Girl" ? "girls" : "boys";
+    dom.secretBrowseList.innerHTML = `<p class="secret-browse-empty">No ${genderWord} on this roster.</p>`;
     return;
   }
 
-  dom.secretSuggestions.innerHTML = matches
-    .slice(0, 8)
-    .map((p, i) => `
-      <div class="secret-suggestion" data-index="${i}" data-player-id="${p.id}">
-        ${escapeHtml(p.name)}
-        <small>${sportLabel(p.sport)}</small>
-      </div>
-    `)
+  dom.secretBrowseList.innerHTML = sorted
+    .map((p) => {
+      const entry = record[p.id];
+      const isSelected = secretEditorPlayers.some((sp) => sp.id === p.id);
+      const timeLabel = entry && entry.present ? entry.timestamp : "Not marked";
+      return `
+        <div class="secret-browse-row ${isSelected ? "selected" : ""}" data-player-id="${p.id}">
+          <span class="secret-browse-row-name">${isSelected ? "✓ " : ""}${escapeHtml(p.name)}</span>
+          <span class="secret-browse-row-time">${timeLabel}</span>
+        </div>
+      `;
+    })
     .join("");
-  dom.secretSuggestions.classList.remove("hidden");
 }
 
-function onSecretPlayerSearchInput(e) {
-  const term = e.target.value.trim().toLowerCase();
-  if (!term) {
-    renderSecretSuggestions([]);
+function onSecretBrowseListClick(e) {
+  const row = e.target.closest(".secret-browse-row");
+  if (!row || !row.dataset.playerId) return;
+
+  const playerId = row.dataset.playerId;
+  if (secretEditorPlayers.some((p) => p.id === playerId)) {
+    removePlayerFromSecretEditor(playerId);
     return;
   }
-  const matches = getAllPlayersWithSport().filter((p) => p.name.toLowerCase().includes(term));
-  renderSecretSuggestions(matches);
+
+  const player = getRosterForSport(secretBrowseSport).find((p) => p.id === playerId);
+  if (!player) return;
+  addPlayerToSecretEditor({ ...player, sport: secretBrowseSport });
 }
 
-function onSecretSuggestionsClick(e) {
-  const row = e.target.closest(".secret-suggestion");
-  if (!row) return;
-  const player = getAllPlayersWithSport().find((p) => p.id === row.dataset.playerId);
-  if (!player) return;
-  addPlayerToSecretEditor(player);
-  dom.secretPlayerSearch.value = "";
-  renderSecretSuggestions([]);
-  dom.secretPlayerSearch.focus();
+function onSecretSportToggleClick(e) {
+  const btn = e.target.closest(".secret-toggle-btn");
+  if (!btn || !btn.dataset.sport) return;
+
+  secretBrowseSport = btn.dataset.sport;
+  dom.secretSportToggle.querySelectorAll(".secret-toggle-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.sport === secretBrowseSport);
+  });
+  renderSecretBrowseList();
+}
+
+function onSecretGenderToggleClick(e) {
+  const btn = e.target.closest(".secret-toggle-btn");
+  if (!btn || !btn.dataset.gender) return;
+
+  secretBrowseGender = btn.dataset.gender;
+  dom.secretGenderToggle.querySelectorAll(".secret-toggle-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.gender === secretBrowseGender);
+  });
+  renderSecretBrowseList();
 }
 
 function onSecretPlayerListClick(e) {
@@ -1849,6 +1904,7 @@ function onSecretPlayerListClick(e) {
 
 function onSecretDateChange() {
   renderSecretPlayerList();
+  renderSecretBrowseList();
 }
 
 // The stacking rule: the first player added gets exactly the typed time.
@@ -1926,8 +1982,9 @@ async function onSecretSaveBtnClick() {
 function bindSecretEditorModalEvents() {
   dom.secretCloseBtn.addEventListener("click", closeSecretEditorModal);
   dom.secretCancelBtn.addEventListener("click", closeSecretEditorModal);
-  dom.secretPlayerSearch.addEventListener("input", onSecretPlayerSearchInput);
-  dom.secretSuggestions.addEventListener("click", onSecretSuggestionsClick);
+  dom.secretBrowseList.addEventListener("click", onSecretBrowseListClick);
+  dom.secretSportToggle.addEventListener("click", onSecretSportToggleClick);
+  dom.secretGenderToggle.addEventListener("click", onSecretGenderToggleClick);
   dom.secretPlayerList.addEventListener("click", onSecretPlayerListClick);
   dom.secretDateInput.addEventListener("change", onSecretDateChange);
   dom.secretApplyCommonBtn.addEventListener("click", onSecretApplyCommonBtnClick);

@@ -142,6 +142,11 @@
           <button class="report-page-tab" data-page="page2" type="button">Page 2 <span class="report-page-tab-sub">(14–26)</span></button>
         </div>
 
+        <div class="report-legend">
+          <span class="report-legend-item"><span class="report-legend-swatch swatch-girl"></span> Girls</span>
+          <span class="report-legend-item"><span class="report-legend-swatch swatch-boy"></span> Boys</span>
+        </div>
+
         <div class="report-pages" id="reportPages">
           <div class="report-page" id="reportPageOne">
             <p class="report-page-label">Page 1 · Players 1–13</p>
@@ -419,10 +424,19 @@
         <input type="date" id="secretDateInput">
       </div>
 
-      <div class="secret-field secret-search-field">
-        <label for="secretPlayerSearch">Add a player</label>
-        <input type="text" id="secretPlayerSearch" placeholder="Type a name…" autocomplete="off">
-        <div id="secretSuggestions" class="secret-suggestions hidden"></div>
+      <div class="secret-field">
+        <label>Add players</label>
+        <div class="secret-toggle-row">
+          <div class="secret-toggle-group" id="secretSportToggle">
+            <button type="button" class="secret-toggle-btn active" data-sport="volleyball">🏐 Volleyball</button>
+            <button type="button" class="secret-toggle-btn" data-sport="basketball">🏀 Basketball</button>
+          </div>
+          <div class="secret-toggle-group" id="secretGenderToggle">
+            <button type="button" class="secret-toggle-btn active" data-gender="Boy">Boys</button>
+            <button type="button" class="secret-toggle-btn" data-gender="Girl">Girls</button>
+          </div>
+        </div>
+        <div id="secretBrowseList" class="secret-browse-list"></div>
       </div>
 
       <div class="secret-field secret-common-row">
@@ -435,7 +449,7 @@
       </div>
 
       <div id="secretPlayerList" class="secret-player-list"></div>
-      <p id="secretEmptyList" class="secret-empty">No players added yet — search above to add one.</p>
+      <p id="secretEmptyList" class="secret-empty">No players added yet — tap a player above to add them.</p>
     </div>
 
     <div class="secret-modal-footer">
