@@ -848,12 +848,14 @@ main {
 
 .report-page-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 18px;
 }
 
 .report-page-tab {
-  flex: 1 1 0;
+  flex: 1 1 calc(50% - 8px);
+  min-width: 120px;
   background: var(--bg);
   border: 1px solid var(--gray-light);
   color: var(--ink-soft);
@@ -908,6 +910,25 @@ main {
   margin: 0 0 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--gray-light);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-page-label-date {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--gold-soft);
+  border: 1px solid rgba(242, 183, 5, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  white-space: nowrap;
 }
 
 .report-groups {
@@ -984,16 +1005,27 @@ main {
   gap: 6px;
 }
 
+/* Used on single-gender / single-group report pages (now that each page is
+   its own full-width sheet instead of two half-width columns). Splits the
+   list into two internal columns so the freed-up horizontal space actually
+   gets used, and rows can be sized generously for printing on long bond
+   paper instead of shrinking to fit a cramped half-width column. */
+.report-list-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 18px;
+}
+
 .report-row {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  font-size: 13.5px;
-  padding: 7px 8px;
+  gap: 4px;
+  font-size: 15px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   background: var(--bg);
   min-width: 0;
-  border-left: 3px solid var(--blue);
+  border-left: 4px solid var(--blue);
 }
 
 .report-row.gender-girl {
@@ -1009,9 +1041,9 @@ main {
 
 .report-row-index {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gray);
-  min-width: 20px;
+  min-width: 22px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -1034,14 +1066,14 @@ main {
 
 .report-row-time {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-soft);
   font-weight: 600;
   margin-left: 20px;
 }
 
 .report-time-meridiem {
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.5px;
   color: var(--gray);
@@ -1049,7 +1081,7 @@ main {
 
 .report-row-status {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--gray);
   margin-left: 20px;
@@ -1118,19 +1150,23 @@ main {
     gap: 12px;
   }
 
+  .report-list-grid {
+    grid-template-columns: 1fr;
+  }
+
   .report-group-title {
     font-size: 15px;
   }
 
   .report-row {
-    font-size: 11.5px;
-    padding: 6px 8px;
-    gap: 6px;
+    font-size: 13px;
+    padding: 8px 10px;
+    gap: 5px;
   }
 
   .report-row-time,
   .report-row-status {
-    font-size: 10px;
+    font-size: 11.5px;
   }
 
   .report-totals {

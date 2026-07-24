@@ -132,7 +132,7 @@
     <!-- ============ REPORT MODE ============ -->
     <section id="reportView" class="report-view hidden">
       <div class="report-card">
-        <div class="report-header">
+        <div class="report-header" id="reportHeader">
           <h2 class="report-title"><span class="ball">🏐</span> Attendance Report</h2>
           <div class="report-meta">
             <span id="reportDate"></span>
@@ -157,50 +157,65 @@
         </div>
 
         <div class="report-page-tabs" id="reportPageTabs">
-          <button class="report-page-tab active" data-page="page1" type="button">Page 1 <span class="report-page-tab-sub">(1–13)</span></button>
-          <button class="report-page-tab" data-page="page2" type="button">Page 2 <span class="report-page-tab-sub">(14–26)</span></button>
+          <button class="report-page-tab active" data-page="page1" type="button">Page 1<span class="report-page-tab-sub" id="reportTabSubP1"></span></button>
+          <button class="report-page-tab" data-page="page2" type="button">Page 2<span class="report-page-tab-sub" id="reportTabSubP2"></span></button>
+          <button class="report-page-tab" data-page="page3" type="button">Page 3<span class="report-page-tab-sub" id="reportTabSubP3"></span></button>
+          <button class="report-page-tab" data-page="page4" type="button">Page 4<span class="report-page-tab-sub" id="reportTabSubP4"></span></button>
         </div>
 
-        <div class="report-legend">
+        <div class="report-legend" id="reportLegend">
           <span class="report-legend-item"><span class="report-legend-swatch swatch-girl"></span> Girls</span>
           <span class="report-legend-item"><span class="report-legend-swatch swatch-boy"></span> Boys</span>
         </div>
 
         <div class="report-pages" id="reportPages">
           <div class="report-page" id="reportPageOne">
-            <p class="report-page-label">Page 1 · Players 1–13</p>
-            <div class="report-groups">
+            <p class="report-page-label" id="reportPageLabelP1"><span class="report-page-label-text" id="reportPageLabelP1Text"></span><span class="report-page-label-date" id="reportPageLabelP1Date"></span></p>
+            <div class="report-groups report-groups-single">
               <div class="report-group">
                 <h3 class="report-group-title">Girls Attendance <span id="reportGirlsCountP1" class="report-group-count"></span></h3>
-                <div id="reportGirlsListP1" class="report-list"></div>
-              </div>
-              <div class="report-group">
-                <h3 class="report-group-title">Boys Attendance <span id="reportBoysCountP1" class="report-group-count"></span></h3>
-                <div id="reportBoysListP1" class="report-list"></div>
+                <div id="reportGirlsListP1" class="report-list report-list-grid"></div>
               </div>
             </div>
           </div>
 
           <div class="report-page hidden" id="reportPageTwo">
-            <p class="report-page-label">Page 2 · Players 14–26</p>
-            <div class="report-groups">
+            <p class="report-page-label" id="reportPageLabelP2"><span class="report-page-label-text" id="reportPageLabelP2Text"></span><span class="report-page-label-date" id="reportPageLabelP2Date"></span></p>
+            <div class="report-groups report-groups-single">
               <div class="report-group">
                 <h3 class="report-group-title">Girls Attendance <span id="reportGirlsCountP2" class="report-group-count"></span></h3>
-                <div id="reportGirlsListP2" class="report-list"></div>
+                <div id="reportGirlsListP2" class="report-list report-list-grid"></div>
               </div>
+            </div>
+          </div>
+
+          <div class="report-page hidden" id="reportPageThree">
+            <p class="report-page-label" id="reportPageLabelP3"><span class="report-page-label-text" id="reportPageLabelP3Text"></span><span class="report-page-label-date" id="reportPageLabelP3Date"></span></p>
+            <div class="report-groups report-groups-single">
+              <div class="report-group">
+                <h3 class="report-group-title">Boys Attendance <span id="reportBoysCountP1" class="report-group-count"></span></h3>
+                <div id="reportBoysListP1" class="report-list report-list-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-page hidden" id="reportPageFour">
+            <p class="report-page-label" id="reportPageLabelP4"><span class="report-page-label-text" id="reportPageLabelP4Text"></span><span class="report-page-label-date" id="reportPageLabelP4Date"></span></p>
+            <div class="report-groups report-groups-single">
               <div class="report-group">
                 <h3 class="report-group-title">Boys Attendance <span id="reportBoysCountP2" class="report-group-count"></span></h3>
-                <div id="reportBoysListP2" class="report-list"></div>
+                <div id="reportBoysListP2" class="report-list report-list-grid"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <p class="report-download-note">One click downloads two separate photos — Page 1 and Page 2 — even though only one shows on screen at a time.</p>
+      <p class="report-download-note">"Download All 4 Pages" saves every page as its own photo in one click. "Download This Page Only" saves just whichever page is showing above — use the tabs to pick which one first. Each page is a single full-width list, sized to print big and clear on long bond paper.</p>
 
       <div class="report-actions">
-        <button id="downloadReportBtn" class="btn-primary" type="button">⬇️ Download Report as Images</button>
+        <button id="downloadReportBtn" class="btn-primary" type="button">⬇️ Download All 4 Pages</button>
+        <button id="downloadCurrentPageBtn" class="btn-secondary" type="button">⬇️ Download This Page Only</button>
         <button id="exitReportBtn" class="btn-secondary" type="button">Exit Report Mode</button>
       </div>
     </section>
@@ -310,7 +325,7 @@
     <!-- ============ REPORT MODE (two pages, one full-width team list each) ============ -->
     <section id="bbReportView" class="report-view hidden">
       <div class="report-card">
-        <div class="report-header">
+        <div class="report-header" id="bbReportHeader">
           <h2 class="report-title"><span class="ball">🏀</span> Attendance Report</h2>
           <div class="report-meta">
             <span id="bbReportDate"></span>
@@ -335,37 +350,60 @@
         </div>
 
         <div class="report-page-tabs" id="bbReportPageTabs">
-          <button class="report-page-tab active" data-page="page1" type="button">Page 1 <span class="report-page-tab-sub">(1–14)</span></button>
-          <button class="report-page-tab" data-page="page2" type="button">Page 2 <span class="report-page-tab-sub">(15–27)</span></button>
+          <button class="report-page-tab active" data-page="page1" type="button">Page 1<span class="report-page-tab-sub" id="bbTabSubP1"></span></button>
+          <button class="report-page-tab" data-page="page2" type="button">Page 2<span class="report-page-tab-sub" id="bbTabSubP2"></span></button>
+          <button class="report-page-tab" data-page="page3" type="button">Page 3<span class="report-page-tab-sub" id="bbTabSubP3"></span></button>
+          <button class="report-page-tab" data-page="page4" type="button">Page 4<span class="report-page-tab-sub" id="bbTabSubP4"></span></button>
         </div>
 
         <div class="report-pages" id="bbReportPages">
           <div class="report-page" id="bbReportPageOne">
-            <p class="report-page-label">Page 1 · Players 1–14</p>
+            <p class="report-page-label" id="bbReportPageLabelP1"><span class="report-page-label-text" id="bbReportPageLabelP1Text"></span><span class="report-page-label-date" id="bbReportPageLabelP1Date"></span></p>
             <div class="report-groups report-groups-single">
               <div class="report-group">
                 <h3 class="report-group-title">Team Attendance <span id="bbReportCountP1" class="report-group-count"></span></h3>
-                <div id="bbReportListP1" class="report-list"></div>
+                <div id="bbReportListP1" class="report-list report-list-grid"></div>
               </div>
             </div>
           </div>
 
           <div class="report-page hidden" id="bbReportPageTwo">
-            <p class="report-page-label">Page 2 · Players 15–27</p>
+            <p class="report-page-label" id="bbReportPageLabelP2"><span class="report-page-label-text" id="bbReportPageLabelP2Text"></span><span class="report-page-label-date" id="bbReportPageLabelP2Date"></span></p>
             <div class="report-groups report-groups-single">
               <div class="report-group">
                 <h3 class="report-group-title">Team Attendance <span id="bbReportCountP2" class="report-group-count"></span></h3>
-                <div id="bbReportListP2" class="report-list"></div>
+                <div id="bbReportListP2" class="report-list report-list-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-page hidden" id="bbReportPageThree">
+            <p class="report-page-label" id="bbReportPageLabelP3"><span class="report-page-label-text" id="bbReportPageLabelP3Text"></span><span class="report-page-label-date" id="bbReportPageLabelP3Date"></span></p>
+            <div class="report-groups report-groups-single">
+              <div class="report-group">
+                <h3 class="report-group-title">Team Attendance <span id="bbReportCountP3" class="report-group-count"></span></h3>
+                <div id="bbReportListP3" class="report-list report-list-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-page hidden" id="bbReportPageFour">
+            <p class="report-page-label" id="bbReportPageLabelP4"><span class="report-page-label-text" id="bbReportPageLabelP4Text"></span><span class="report-page-label-date" id="bbReportPageLabelP4Date"></span></p>
+            <div class="report-groups report-groups-single">
+              <div class="report-group">
+                <h3 class="report-group-title">Team Attendance <span id="bbReportCountP4" class="report-group-count"></span></h3>
+                <div id="bbReportListP4" class="report-list report-list-grid"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <p class="report-download-note">One click downloads two separate photos — Page 1 and Page 2 — even though only one shows on screen at a time.</p>
+      <p class="report-download-note">"Download All 4 Pages" saves every page as its own photo in one click. "Download This Page Only" saves just whichever page is showing above — use the tabs to pick which one first. Each page is a single full-width list, sized to print big and clear on long bond paper.</p>
 
       <div class="report-actions">
-        <button id="bbDownloadReportBtn" class="btn-primary" type="button">⬇️ Download Report as Images</button>
+        <button id="bbDownloadReportBtn" class="btn-primary" type="button">⬇️ Download All 4 Pages</button>
+        <button id="bbDownloadCurrentPageBtn" class="btn-secondary" type="button">⬇️ Download This Page Only</button>
         <button id="bbExitReportBtn" class="btn-secondary" type="button">Exit Report Mode</button>
       </div>
     </section>

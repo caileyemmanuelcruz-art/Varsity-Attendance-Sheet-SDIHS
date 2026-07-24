@@ -30,12 +30,10 @@ const ROSTER = [
   { id: "b02", name: "Agustin, Carlo Hernandez", gender: "Boy", grade: 11, section: "Yakal", birthday: "11/16/2009" },
   { id: "b04", name: "Balagso, Francis C.", gender: "Boy", grade: 10, section: "Pulag", birthday: "06/10/2011" },
   { id: "b06", name: "Borlaza, Gabriel Lenard S.", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "03/01/2012" },
-  { id: "b07", name: "Braganca, Bruce Rola", gender: "Boy", grade: 8, section: "Corinthians", birthday: "09/08/2013" },
   { id: "b09", name: "Cayabyab, Hiro O.", gender: "Boy", grade: 8, section: "Exodus", birthday: "04/04/2011" },
   { id: "b10", name: "Cruz, Cailey Emmanuel", gender: "Boy", grade: 11, section: "Acacia", birthday: "02/10/2010" },
   { id: "b11", name: "Cuarteros, Charles R.", gender: "Boy", grade: 10, section: "Pulag", birthday: "09/16/2009" },
   { id: "b12", name: "Garcia, Kier Zaijan T.", gender: "Boy", grade: 9, section: "Mapagmahal", birthday: "12/01/2011" },
-  { id: "b15", name: "Mendoza, Joshua", gender: "Boy", grade: 7, section: "Marcos", birthday: "04/04/2014" },
   { id: "b16", name: "Mendoza, Mark Gabriel", gender: "Boy", grade: 10, section: "Sierra Madre", birthday: "05/02/2011" },
   { id: "b19", name: "Popanes, Jhay M.", gender: "Boy", grade: 9, section: "Magalang", birthday: "06/08/2011" },
   { id: "b20", name: "Ramos, Gabriel", gender: "Boy", grade: 10, section: "Kanlaon", birthday: "01/14/2011" },
@@ -49,7 +47,6 @@ const ROSTER = [
   { id: "g04", name: "Bibat, Chriza Jane", gender: "Girl", grade: 9, section: "Matatag", birthday: "06/15/2011" },
   { id: "g05", name: "Bueza, Rhianwhen B.", gender: "Girl", grade: 7, section: "Aquino", birthday: "10/04/2013" },
   { id: "g07", name: "Desepeda, Kate", gender: "Girl", grade: 10, section: "Halcon", birthday: "03/31/2011" },
-  { id: "g09", name: "Jacinto, Alyza Z.", gender: "Girl", grade: 9, section: "Matipid", birthday: "03/27/2012" },
   { id: "g10", name: "Jagonoy, Huxlie", gender: "Girl", grade: 9, section: "Magalang", birthday: "01/11/2012" },
   { id: "g11", name: "Latayan, Ashley Anne B.", gender: "Girl", grade: 7, section: "Macapagal", birthday: "05/12/2014" },
   { id: "g12", name: "Madrideo, Ayesha Mae R.", gender: "Girl", grade: 10, section: "Sierra Madre", birthday: "06/11/2011" },
@@ -57,7 +54,6 @@ const ROSTER = [
   { id: "g15", name: "Mata, April Dhane A.", gender: "Girl", grade: 8, section: "Chronicles", birthday: "04/20/2013" },
   { id: "g18", name: "Moron, Maria Michaela L.", gender: "Girl", grade: 8, section: "Corinthians", birthday: "09/18/2011" },
   { id: "g20", name: "Ramos, Rhian", gender: "Girl", grade: 10, section: "Makiling", birthday: "12/29/2009" },
-  { id: "g21", name: "Rebecca, Rhianne", gender: "Girl", grade: 9, section: "Mabait", birthday: "07/10/2011" },
   { id: "g22", name: "Regodon, Cezanne", gender: "Girl", grade: 9, section: "Mapagmahal", birthday: "11/26/2011" },
   { id: "g23", name: "Salanatin, Daniela Corazon", gender: "Girl", grade: 11, section: "Yakal", birthday: "02/15/2010" },
   { id: "g25", name: "Satingin, Janyra", gender: "Girl", grade: 7, section: "Garcia", birthday: "01/21/2012" },
@@ -104,6 +100,8 @@ const ROSTER_BASKETBALL = [
   { id: "bk32", name: "Desepeda, John Uno", gender: "Boy", grade: "", section: "", birthday: null },
   { id: "bk33", name: "Gange, Christian", gender: "Boy", grade: "", section: "", birthday: null },
   { id: "bk34", name: "Rosario, John Matthew", gender: "Boy", grade: "", section: "", birthday: null },
+  { id: "bk35", name: "Pakinggan, John Christian", gender: "Boy", grade: 8, section: "Exodus", birthday: null },
+  { id: "bk36", name: "Villanueva, Christopher", gender: "Boy", grade: "", section: "", birthday: null },
 ];
 
 // Every roster in the system, keyed by the same sport names used in
@@ -293,6 +291,16 @@ function formatDateLong(date) {
   });
 }
 
+// "Jul 16, 2026" — compact form used on the Page 2–4 date badge, since the
+// full header (with the long weekday name) only shows on Page 1.
+function formatDateShort(date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 // "10:32:15 AM" style live clock / timestamp text.
 function formatTime(date) {
   return date.toLocaleTimeString("en-US", {
@@ -393,8 +401,25 @@ const dom = {
   reportTotalPresent: document.getElementById("reportTotalPresent"),
   reportTotalAbsent: document.getElementById("reportTotalAbsent"),
   reportPageTabs: document.getElementById("reportPageTabs"),
+  reportHeader: document.getElementById("reportHeader"),
+  reportLegend: document.getElementById("reportLegend"),
+  reportTotals: document.getElementById("reportTotals"),
+  reportTabSubP1: document.getElementById("reportTabSubP1"),
+  reportTabSubP2: document.getElementById("reportTabSubP2"),
+  reportTabSubP3: document.getElementById("reportTabSubP3"),
+  reportTabSubP4: document.getElementById("reportTabSubP4"),
   reportPageOne: document.getElementById("reportPageOne"),
   reportPageTwo: document.getElementById("reportPageTwo"),
+  reportPageThree: document.getElementById("reportPageThree"),
+  reportPageFour: document.getElementById("reportPageFour"),
+  reportPageLabelP1Text: document.getElementById("reportPageLabelP1Text"),
+  reportPageLabelP1Date: document.getElementById("reportPageLabelP1Date"),
+  reportPageLabelP2Text: document.getElementById("reportPageLabelP2Text"),
+  reportPageLabelP2Date: document.getElementById("reportPageLabelP2Date"),
+  reportPageLabelP3Text: document.getElementById("reportPageLabelP3Text"),
+  reportPageLabelP3Date: document.getElementById("reportPageLabelP3Date"),
+  reportPageLabelP4Text: document.getElementById("reportPageLabelP4Text"),
+  reportPageLabelP4Date: document.getElementById("reportPageLabelP4Date"),
   reportGirlsListP1: document.getElementById("reportGirlsListP1"),
   reportBoysListP1: document.getElementById("reportBoysListP1"),
   reportGirlsCountP1: document.getElementById("reportGirlsCountP1"),
@@ -405,6 +430,7 @@ const dom = {
   reportBoysCountP2: document.getElementById("reportBoysCountP2"),
   exitReportBtn: document.getElementById("exitReportBtn"),
   downloadReportBtn: document.getElementById("downloadReportBtn"),
+  downloadCurrentPageBtn: document.getElementById("downloadCurrentPageBtn"),
 
   piSportSelect: document.getElementById("piSportSelect"),
   piSearchWrap: document.getElementById("piSearchWrap"),
@@ -459,14 +485,35 @@ const dom = {
   bbReportTotalPresent: document.getElementById("bbReportTotalPresent"),
   bbReportTotalAbsent: document.getElementById("bbReportTotalAbsent"),
   bbReportPageTabs: document.getElementById("bbReportPageTabs"),
+  bbReportHeader: document.getElementById("bbReportHeader"),
+  bbReportTotals: document.getElementById("bbReportTotals"),
+  bbTabSubP1: document.getElementById("bbTabSubP1"),
+  bbTabSubP2: document.getElementById("bbTabSubP2"),
+  bbTabSubP3: document.getElementById("bbTabSubP3"),
+  bbTabSubP4: document.getElementById("bbTabSubP4"),
   bbReportPageOne: document.getElementById("bbReportPageOne"),
   bbReportPageTwo: document.getElementById("bbReportPageTwo"),
+  bbReportPageThree: document.getElementById("bbReportPageThree"),
+  bbReportPageFour: document.getElementById("bbReportPageFour"),
+  bbReportPageLabelP1Text: document.getElementById("bbReportPageLabelP1Text"),
+  bbReportPageLabelP1Date: document.getElementById("bbReportPageLabelP1Date"),
+  bbReportPageLabelP2Text: document.getElementById("bbReportPageLabelP2Text"),
+  bbReportPageLabelP2Date: document.getElementById("bbReportPageLabelP2Date"),
+  bbReportPageLabelP3Text: document.getElementById("bbReportPageLabelP3Text"),
+  bbReportPageLabelP3Date: document.getElementById("bbReportPageLabelP3Date"),
+  bbReportPageLabelP4Text: document.getElementById("bbReportPageLabelP4Text"),
+  bbReportPageLabelP4Date: document.getElementById("bbReportPageLabelP4Date"),
   bbReportCountP1: document.getElementById("bbReportCountP1"),
   bbReportListP1: document.getElementById("bbReportListP1"),
   bbReportCountP2: document.getElementById("bbReportCountP2"),
   bbReportListP2: document.getElementById("bbReportListP2"),
+  bbReportCountP3: document.getElementById("bbReportCountP3"),
+  bbReportListP3: document.getElementById("bbReportListP3"),
+  bbReportCountP4: document.getElementById("bbReportCountP4"),
+  bbReportListP4: document.getElementById("bbReportListP4"),
   bbExitReportBtn: document.getElementById("bbExitReportBtn"),
   bbDownloadReportBtn: document.getElementById("bbDownloadReportBtn"),
+  bbDownloadCurrentPageBtn: document.getElementById("bbDownloadCurrentPageBtn"),
 
   // Password modal (styled replacement for window.prompt())
   passwordModalOverlay: document.getElementById("passwordModalOverlay"),
@@ -904,14 +951,25 @@ function renderBbReport() {
   dom.bbReportTotalPresent.textContent = presentTotal;
   dom.bbReportTotalAbsent.textContent = players.length - presentTotal;
 
-  // One team, split into two halves so each page stays a readable, full
-  // width, single-column list instead of one long 27-row page.
-  const half = Math.ceil(players.length / 2);
-  const pageOnePlayers = players.slice(0, half);
-  const pageTwoPlayers = players.slice(half);
+  // FOUR pages instead of two — each a quarter of the roster, full width,
+  // single column — so rows can print big and legible on long bond paper
+  // instead of a long, cramped single list.
+  const quarter = Math.ceil(players.length / 4);
+  const q1 = players.slice(0, quarter);
+  const q2 = players.slice(quarter, quarter * 2);
+  const q3 = players.slice(quarter * 2, quarter * 3);
+  const q4 = players.slice(quarter * 3);
 
-  renderReportHalf(pageOnePlayers, record, dom.bbReportListP1, dom.bbReportCountP1, 0, presentTotal, players.length);
-  renderReportHalf(pageTwoPlayers, record, dom.bbReportListP2, dom.bbReportCountP2, half, presentTotal, players.length);
+  renderReportHalf(q1, record, dom.bbReportListP1, dom.bbReportCountP1, 0, presentTotal, players.length);
+  renderReportHalf(q2, record, dom.bbReportListP2, dom.bbReportCountP2, quarter, presentTotal, players.length);
+  renderReportHalf(q3, record, dom.bbReportListP3, dom.bbReportCountP3, quarter * 2, presentTotal, players.length);
+  renderReportHalf(q4, record, dom.bbReportListP4, dom.bbReportCountP4, quarter * 3, presentTotal, players.length);
+
+  const bbPageDateText = formatDateShort(viewingDate);
+  setReportPageMeta(dom.bbReportPageLabelP1Text, dom.bbReportPageLabelP1Date, dom.bbTabSubP1, "Team", 1, q1.length, bbPageDateText);
+  setReportPageMeta(dom.bbReportPageLabelP2Text, dom.bbReportPageLabelP2Date, dom.bbTabSubP2, "Team", quarter + 1, quarter + q2.length, bbPageDateText);
+  setReportPageMeta(dom.bbReportPageLabelP3Text, dom.bbReportPageLabelP3Date, dom.bbTabSubP3, "Team", quarter * 2 + 1, quarter * 2 + q3.length, bbPageDateText);
+  setReportPageMeta(dom.bbReportPageLabelP4Text, dom.bbReportPageLabelP4Date, dom.bbTabSubP4, "Team", quarter * 3 + 1, players.length, bbPageDateText);
 }
 
 function enterBbReportMode() {
@@ -932,15 +990,22 @@ function exitBbReportMode() {
   updateBbHistoryBanner();
 }
 
-// Show only the chosen page (Page 1 or Page 2) on screen — full width, one
-// at a time. The download always produces two separate images, one per
-// page, regardless of which one is currently showing (see
-// downloadBbReportImage).
+// Show only the chosen page (Page 1–4) on screen — full width, one at a
+// time. The header and total counts only appear on Page 1; Pages 2–4 go
+// straight into the player list. The download always produces four
+// separate images, one per page, regardless of which one is currently
+// showing (see downloadBbReportImage).
 function switchBbReportPage(page) {
   state.bbReportPage = page;
+  const isPageOne = page === "page1";
+
+  dom.bbReportHeader.classList.toggle("hidden", !isPageOne);
+  dom.bbReportTotals.classList.toggle("hidden", !isPageOne);
 
   dom.bbReportPageOne.classList.toggle("hidden", page !== "page1");
   dom.bbReportPageTwo.classList.toggle("hidden", page !== "page2");
+  dom.bbReportPageThree.classList.toggle("hidden", page !== "page3");
+  dom.bbReportPageFour.classList.toggle("hidden", page !== "page4");
 
   dom.bbReportPageTabs.querySelectorAll(".report-page-tab").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.page === page);
@@ -971,17 +1036,25 @@ function captureBbReportPage(target, page) {
       const tabs = clonedDoc.querySelector("#bbReportPageTabs");
       if (tabs) tabs.style.display = "none";
 
-      const pageOne = clonedDoc.querySelector("#bbReportPageOne");
-      const pageTwo = clonedDoc.querySelector("#bbReportPageTwo");
+      // Header and totals only belong on Page 1 — every other page goes
+      // straight into the player list to maximize how many players fit on
+      // each printed sheet.
+      const isPageOne = page === "page1";
+      const header = clonedDoc.querySelector("#bbReportHeader");
+      const totals = clonedDoc.querySelector("#bbReportTotals");
+      if (header) header.classList.toggle("hidden", !isPageOne);
+      if (totals) totals.classList.toggle("hidden", !isPageOne);
 
-      if (pageOne) pageOne.classList.toggle("hidden", page !== "page1");
-      if (pageTwo) pageTwo.classList.toggle("hidden", page !== "page2");
+      ["bbReportPageOne", "bbReportPageTwo", "bbReportPageThree", "bbReportPageFour"].forEach((id, i) => {
+        const el = clonedDoc.querySelector(`#${id}`);
+        if (el) el.classList.toggle("hidden", page !== `page${i + 1}`);
+      });
     },
   });
 }
 
-// One click downloads TWO separate PNGs — Page 1 and Page 2 — the same way
-// the volleyball report does, regardless of which page is on screen.
+// One click downloads FOUR separate PNGs — Page 1 through Page 4 — the same
+// way the volleyball report does, regardless of which page is on screen.
 async function downloadBbReportImage() {
   const target = document.querySelector("#page-basketball .report-card");
   const btn = dom.bbDownloadReportBtn;
@@ -1000,15 +1073,12 @@ async function downloadBbReportImage() {
   window.scrollTo(0, 0);
 
   try {
-    btn.textContent = "Generating page 1…";
-    const canvas1 = await captureBbReportPage(target, "page1");
-    downloadCanvasAsPng(canvas1, `basketball-report-page1-${state.bbViewingDateKey}.png`);
-
-    await wait(400);
-
-    btn.textContent = "Generating page 2…";
-    const canvas2 = await captureBbReportPage(target, "page2");
-    downloadCanvasAsPng(canvas2, `basketball-report-page2-${state.bbViewingDateKey}.png`);
+    for (let i = 1; i <= 4; i++) {
+      btn.textContent = `Generating page ${i} of 4…`;
+      const canvas = await captureBbReportPage(target, `page${i}`);
+      downloadCanvasAsPng(canvas, `basketball-report-page${i}-${state.bbViewingDateKey}.png`);
+      if (i < 4) await wait(400);
+    }
   } catch (err) {
     console.error("Could not generate basketball report images:", err);
     window.alert("Something went wrong generating the images. Please try again.");
@@ -1020,7 +1090,54 @@ async function downloadBbReportImage() {
   }
 }
 
+// Downloads just whichever single basketball page is currently showing on
+// screen — same idea as downloadCurrentReportPage() for volleyball.
+async function downloadCurrentBbReportPage() {
+  const target = document.querySelector("#page-basketball .report-card");
+  const btn = dom.bbDownloadCurrentPageBtn;
+
+  if (typeof html2canvas !== "function") {
+    window.alert("Image export isn't available right now — check your internet connection and try again.");
+    return;
+  }
+
+  const page = state.bbReportPage;
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
+
+  try {
+    const canvas = await captureBbReportPage(target, page);
+    const pageNumber = page.replace("page", "");
+    downloadCanvasAsPng(canvas, `basketball-report-page${pageNumber}-${state.bbViewingDateKey}.png`);
+  } catch (err) {
+    console.error("Could not generate basketball report image:", err);
+    window.alert("Something went wrong generating the image. Please try again.");
+  } finally {
+    window.scrollTo(scrollX, scrollY);
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+
 /* ---- Report Mode rendering ---- */
+
+// Fills in a page's label (shown on the page itself) and its tab subtitle
+// (shown in the tab strip) from the actual current roster counts, so these
+// never go stale the way hardcoded HTML text would when players are
+// added/removed. Also stamps the page with the attendance date it belongs
+// to (as a small badge) so a page printed and handed out on its own never
+// gets mixed up with a different day's sheet.
+function setReportPageMeta(labelTextEl, labelDateEl, subEl, groupName, startNum, endNum, dateText) {
+  const range = endNum < startNum ? "—" : startNum === endNum ? `${startNum}` : `${startNum}–${endNum}`;
+  labelTextEl.textContent = `${groupName} · Players ${range}`;
+  labelDateEl.textContent = dateText;
+  subEl.textContent = ` (${groupName} ${range})`;
+}
 
 function renderReport() {
   const now = new Date();
@@ -1045,10 +1162,10 @@ function renderReport() {
   const girlsPresentTotal = girls.filter((p) => record[p.id] && record[p.id].present).length;
   const boysPresentTotal = boys.filter((p) => record[p.id] && record[p.id].present).length;
 
-  // Split each gender list into two halves (13 + 13 for a 26-player roster,
-  // but this works for any count) so each page shows half the girls and
-  // half the boys, side by side. Each row is also tinted gold/blue by
-  // gender (see buildReportRows) as an extra visual cue.
+  // FOUR pages total, one gender-half per page (Page 1: Girls A, Page 2:
+  // Girls B, Page 3: Boys A, Page 4: Boys B) — each a single full-width
+  // list rather than two half-width columns, so rows print big and legible
+  // on long bond paper.
   const girlsHalf = Math.ceil(girls.length / 2);
   const boysHalf = Math.ceil(boys.length / 2);
 
@@ -1058,9 +1175,15 @@ function renderReport() {
   const boysP2 = boys.slice(boysHalf);
 
   renderReportHalf(girlsP1, record, dom.reportGirlsListP1, dom.reportGirlsCountP1, 0, girlsPresentTotal, girls.length);
-  renderReportHalf(boysP1, record, dom.reportBoysListP1, dom.reportBoysCountP1, 0, boysPresentTotal, boys.length);
   renderReportHalf(girlsP2, record, dom.reportGirlsListP2, dom.reportGirlsCountP2, girlsHalf, girlsPresentTotal, girls.length);
+  renderReportHalf(boysP1, record, dom.reportBoysListP1, dom.reportBoysCountP1, 0, boysPresentTotal, boys.length);
   renderReportHalf(boysP2, record, dom.reportBoysListP2, dom.reportBoysCountP2, boysHalf, boysPresentTotal, boys.length);
+
+  const pageDateText = formatDateShort(viewingDate);
+  setReportPageMeta(dom.reportPageLabelP1Text, dom.reportPageLabelP1Date, dom.reportTabSubP1, "Girls", 1, girlsP1.length, pageDateText);
+  setReportPageMeta(dom.reportPageLabelP2Text, dom.reportPageLabelP2Date, dom.reportTabSubP2, "Girls", girlsHalf + 1, girls.length, pageDateText);
+  setReportPageMeta(dom.reportPageLabelP3Text, dom.reportPageLabelP3Date, dom.reportTabSubP3, "Boys", 1, boysP1.length, pageDateText);
+  setReportPageMeta(dom.reportPageLabelP4Text, dom.reportPageLabelP4Date, dom.reportTabSubP4, "Boys", boysHalf + 1, boys.length, pageDateText);
 }
 
 // Renders one gender's half-list into one page, with row numbers continuing
@@ -1727,15 +1850,24 @@ function exitReportMode() {
   updateHistoryBanner();
 }
 
-// Show only the chosen page (Page 1 or Page 2) on screen — each page is
-// half the girls plus half the boys, side by side. The download always
-// produces two separate images, one per page, regardless of which one is
-// currently showing (see downloadReportImage).
+// Show only the chosen page (Page 1–4) on screen — each page is now a
+// single full-width gender-half list. The header, total counts, and legend
+// only appear on Page 1; Pages 2–4 go straight into the player list so
+// every page is as full of players as possible when printed. The download
+// always produces four separate images, one per page, regardless of which
+// one is currently showing (see downloadReportImage).
 function switchReportPage(page) {
   state.reportPage = page;
+  const isPageOne = page === "page1";
+
+  dom.reportHeader.classList.toggle("hidden", !isPageOne);
+  dom.reportTotals.classList.toggle("hidden", !isPageOne);
+  dom.reportLegend.classList.toggle("hidden", !isPageOne);
 
   dom.reportPageOne.classList.toggle("hidden", page !== "page1");
   dom.reportPageTwo.classList.toggle("hidden", page !== "page2");
+  dom.reportPageThree.classList.toggle("hidden", page !== "page3");
+  dom.reportPageFour.classList.toggle("hidden", page !== "page4");
 
   dom.reportPageTabs.querySelectorAll(".report-page-tab").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.page === page);
@@ -1748,10 +1880,10 @@ function onReportPageTabClick(e) {
   switchReportPage(btn.dataset.page);
 }
 
-// Capture just ONE report page (page1 or page2) as its own canvas. Everything
+// Capture just ONE report page (page1–page4) as its own canvas. Everything
 // outside the report card — sticky nav, action buttons, the page tabs — is
 // hidden in the cloned document so it can never bleed into the image, and
-// only the requested page is shown while the other stays hidden.
+// only the requested page is shown while the others stay hidden.
 function captureReportPage(target, page) {
   return html2canvas(target, {
     backgroundColor: "#ffffff",
@@ -1767,11 +1899,21 @@ function captureReportPage(target, page) {
       const tabs = clonedDoc.querySelector("#reportPageTabs");
       if (tabs) tabs.style.display = "none";
 
-      const pageOne = clonedDoc.querySelector("#reportPageOne");
-      const pageTwo = clonedDoc.querySelector("#reportPageTwo");
+      // Header, totals, and legend only belong on Page 1 — every other
+      // page goes straight into the player list to maximize how many
+      // players fit on each printed sheet.
+      const isPageOne = page === "page1";
+      const header = clonedDoc.querySelector("#reportHeader");
+      const totals = clonedDoc.querySelector("#reportTotals");
+      const legend = clonedDoc.querySelector("#reportLegend");
+      if (header) header.classList.toggle("hidden", !isPageOne);
+      if (totals) totals.classList.toggle("hidden", !isPageOne);
+      if (legend) legend.classList.toggle("hidden", !isPageOne);
 
-      if (pageOne) pageOne.classList.toggle("hidden", page !== "page1");
-      if (pageTwo) pageTwo.classList.toggle("hidden", page !== "page2");
+      ["reportPageOne", "reportPageTwo", "reportPageThree", "reportPageFour"].forEach((id, i) => {
+        const el = clonedDoc.querySelector(`#${id}`);
+        if (el) el.classList.toggle("hidden", page !== `page${i + 1}`);
+      });
     },
   });
 }
@@ -1791,10 +1933,9 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// One click of the download button produces TWO separate PNGs — one photo
-// for Page 1 and one photo for Page 2 — regardless of which page happens to
-// be showing on screen. The coach never has to switch tabs and download
-// twice by hand.
+// One click of the download button produces FOUR separate PNGs — one photo
+// per page — regardless of which page happens to be showing on screen. The
+// coach never has to switch tabs and download four times by hand.
 async function downloadReportImage() {
   const target = document.querySelector(".report-card");
   const btn = dom.downloadReportBtn;
@@ -1813,15 +1954,12 @@ async function downloadReportImage() {
   window.scrollTo(0, 0);
 
   try {
-    btn.textContent = "Generating page 1…";
-    const canvas1 = await captureReportPage(target, "page1");
-    downloadCanvasAsPng(canvas1, `attendance-report-page1-${state.viewingDateKey}.png`);
-
-    await wait(400);
-
-    btn.textContent = "Generating page 2…";
-    const canvas2 = await captureReportPage(target, "page2");
-    downloadCanvasAsPng(canvas2, `attendance-report-page2-${state.viewingDateKey}.png`);
+    for (let i = 1; i <= 4; i++) {
+      btn.textContent = `Generating page ${i} of 4…`;
+      const canvas = await captureReportPage(target, `page${i}`);
+      downloadCanvasAsPng(canvas, `attendance-report-page${i}-${state.viewingDateKey}.png`);
+      if (i < 4) await wait(400);
+    }
   } catch (err) {
     console.error("Could not generate report images:", err);
     window.alert("Something went wrong generating the images. Please try again.");
@@ -1829,6 +1967,40 @@ async function downloadReportImage() {
     // Restore whichever page was actually showing on screen before we
     // started swapping pages in the (separate) cloned documents.
     switchReportPage(originalPage);
+    window.scrollTo(scrollX, scrollY);
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+
+// Downloads just whichever single page is currently showing on screen —
+// for when the coach only needs to reprint one page instead of all four.
+async function downloadCurrentReportPage() {
+  const target = document.querySelector(".report-card");
+  const btn = dom.downloadCurrentPageBtn;
+
+  if (typeof html2canvas !== "function") {
+    window.alert("Image export isn't available right now — check your internet connection and try again.");
+    return;
+  }
+
+  const page = state.reportPage;
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
+
+  try {
+    const canvas = await captureReportPage(target, page);
+    const pageNumber = page.replace("page", "");
+    downloadCanvasAsPng(canvas, `attendance-report-page${pageNumber}-${state.viewingDateKey}.png`);
+  } catch (err) {
+    console.error("Could not generate report image:", err);
+    window.alert("Something went wrong generating the image. Please try again.");
+  } finally {
     window.scrollTo(scrollX, scrollY);
     btn.textContent = originalLabel;
     btn.disabled = false;
@@ -2230,6 +2402,7 @@ function bindEvents() {
   dom.reportModeBtn.addEventListener("click", enterReportMode);
   dom.exitReportBtn.addEventListener("click", exitReportMode);
   dom.downloadReportBtn.addEventListener("click", downloadReportImage);
+  dom.downloadCurrentPageBtn.addEventListener("click", downloadCurrentReportPage);
   dom.reportPageTabs.addEventListener("click", onReportPageTabClick);
 
   dom.piSportSelect.addEventListener("change", onPiSportChange);
@@ -2249,6 +2422,7 @@ function bindEvents() {
   dom.bbReportModeBtn.addEventListener("click", enterBbReportMode);
   dom.bbExitReportBtn.addEventListener("click", exitBbReportMode);
   dom.bbDownloadReportBtn.addEventListener("click", downloadBbReportImage);
+  dom.bbDownloadCurrentPageBtn.addEventListener("click", downloadCurrentBbReportPage);
   dom.bbReportPageTabs.addEventListener("click", onBbReportPageTabClick);
 
   bindSecretTimeEditorTrigger();
