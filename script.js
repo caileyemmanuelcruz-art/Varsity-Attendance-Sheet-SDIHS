@@ -41,6 +41,8 @@ const ROSTER = [
   { id: "b24", name: "Satingin, John Kaizer", gender: "Boy", grade: 11, section: "Yakal", birthday: "01/11/2010" },
   { id: "b25", name: "Umali, Yale Rayven G.", gender: "Boy", grade: 11, section: "Yakal", birthday: "03/29/2009" },
   { id: "b26", name: "Villanueva, Gian Carlo L.", gender: "Boy", grade: 11, section: "Yakal", birthday: "02/27/2010" },
+  { id: "b27", name: "Quimio, Zyrus", gender: "Boy", grade: 11, section: "Yakal", birthday: "01/29/2010", joinDate: "2026-07-25" },
+  { id: "b28", name: "Sancha, Rhalf", gender: "Boy", grade: 8, section: "", birthday: null },
 
   // ---- Girls ----
   { id: "g03", name: "Bautista, Glaiza Mae", gender: "Girl", grade: 10, section: "Banahaw", birthday: "12/30/2010" },
@@ -93,15 +95,16 @@ const ROSTER_BASKETBALL = [
 
   // ---- New players added — grade/section/birthday left blank until
   // that info is provided. ----
-  { id: "bk28", name: "Anipot, Ralph Dominique", gender: "Boy", grade: "", section: "", birthday: null },
+  { id: "bk28", name: "Anipot, Ralph Dominique", gender: "Boy", grade: 9, section: "Matatag", birthday: "09/17/2011" },
   { id: "bk29", name: "Brutal, Zach Anthony", gender: "Boy", grade: "", section: "", birthday: null },
   { id: "bk30", name: "Concha, Denmark B.", gender: "Boy", grade: "", section: "", birthday: null },
-  { id: "bk31", name: "Desder, Don Ryan", gender: "Boy", grade: "", section: "", birthday: null },
-  { id: "bk32", name: "Desepeda, John Uno", gender: "Boy", grade: "", section: "", birthday: null },
-  { id: "bk33", name: "Gange, Christian", gender: "Boy", grade: "", section: "", birthday: null },
-  { id: "bk34", name: "Rosario, John Matthew", gender: "Boy", grade: "", section: "", birthday: null },
+  { id: "bk31", name: "Desder, Don Ryan", gender: "Boy", grade: 9, section: "Matatag", birthday: "10/07/2012" },
+  { id: "bk32", name: "Desepeda, John Uno", gender: "Boy", grade: 8, section: "Psalms", birthday: "01/01/2012" },
+  { id: "bk33", name: "Gange, Christian", gender: "Boy", grade: 9, section: "Masipag", birthday: "05/15/2012" },
+  { id: "bk34", name: "Rosario, John Matthew", gender: "Boy", grade: 9, section: "Matipid", birthday: "09/08/2011" },
   { id: "bk35", name: "Pakinggan, John Christian", gender: "Boy", grade: 8, section: "Exodus", birthday: null },
   { id: "bk36", name: "Villanueva, Christopher", gender: "Boy", grade: "", section: "", birthday: null },
+  { id: "bk37", name: "Fruta, Antony", gender: "Boy", grade: 9, section: "Masipag", birthday: "07/06/2012" },
 ];
 
 // Every roster in the system, keyed by the same sport names used in
@@ -114,6 +117,14 @@ const ROSTERS_BY_SPORT = {
 
 function getRosterForSport(sport) {
   return ROSTERS_BY_SPORT[sport] || [];
+}
+
+// A player who joined partway through the season can be given a joinDate
+// ("YYYY-MM-DD"). They're left off every attendance sheet, report, and
+// count for dates before that day — so their name just doesn't appear on
+// past attendance rather than showing up there as retroactively absent.
+function isRosteredOn(player, dateKey) {
+  return !player.joinDate || dateKey >= player.joinDate;
 }
 
 /* ==========================================================================
@@ -656,7 +667,8 @@ function buildFilterSummaryText(count) {
   if (state.searchTerm.trim()) parts.push(`matching "${state.searchTerm.trim()}"`);
 
   if (parts.length === 0) {
-    return `Showing all ${ROSTER.length} players`;
+    const activeCount = ROSTER.filter((p) => isRosteredOn(p, state.viewingDateKey)).length;
+    return `Showing all ${activeCount} players`;
   }
   return `Showing ${count} player${count === 1 ? "" : "s"} — ${parts.join(" · ")}`;
 }
@@ -1147,13 +1159,14 @@ function renderReport() {
   dom.reportDate.textContent = formatDateLong(viewingDate);
   dom.reportTime.textContent = isViewingToday() ? formatTime(now) : "Historical record";
 
-  const girls = ROSTER.filter((p) => p.gender === "Girl").sort((a, b) => a.name.localeCompare(b.name));
-  const boys = ROSTER.filter((p) => p.gender === "Boy").sort((a, b) => a.name.localeCompare(b.name));
+  const rostered = ROSTER.filter((p) => isRosteredOn(p, state.viewingDateKey));
+  const girls = rostered.filter((p) => p.gender === "Girl").sort((a, b) => a.name.localeCompare(b.name));
+  const boys = rostered.filter((p) => p.gender === "Boy").sort((a, b) => a.name.localeCompare(b.name));
 
-  const presentTotal = ROSTER.filter((p) => record[p.id] && record[p.id].present).length;
-  dom.reportTotalAll.textContent = ROSTER.length;
+  const presentTotal = rostered.filter((p) => record[p.id] && record[p.id].present).length;
+  dom.reportTotalAll.textContent = rostered.length;
   dom.reportTotalPresent.textContent = presentTotal;
-  dom.reportTotalAbsent.textContent = ROSTER.length - presentTotal;
+  dom.reportTotalAbsent.textContent = rostered.length - presentTotal;
 
   // Whole-roster present counts per gender (not just this page's half) —
   // the header next to "Girls Attendance" / "Boys Attendance" shows this,
@@ -1354,7 +1367,7 @@ function getFilteredSortedRoster() {
     const matchesGender = state.genderFilter === "all" || p.gender === state.genderFilter;
     const matchesGrade = state.gradeFilter === "all" || String(p.grade) === state.gradeFilter;
     const matchesSection = state.sectionFilter === "all" || p.section === state.sectionFilter;
-    return matchesSearch && matchesGender && matchesGrade && matchesSection;
+    return matchesSearch && matchesGender && matchesGrade && matchesSection && isRosteredOn(p, state.viewingDateKey);
   });
 
   switch (state.sortBy) {
