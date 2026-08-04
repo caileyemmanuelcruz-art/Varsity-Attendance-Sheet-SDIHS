@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intrams T-Shirt Orders</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="tshirts.css">
+</head>
+<body>
+
+<div id="app">
+  <header class="app-header">
+    <div class="header-top">
+      <h1 class="app-title"><span class="ball">🎽</span> Intrams T-Shirt Orders</h1>
+      <div class="datetime">
+        <span id="currentDate" class="current-date"></span>
+        <span id="currentTime" class="current-time"></span>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-item">
+        <span class="stat-value" id="statTotalOrders">0</span>
+        <span class="stat-label">Orders</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item stat-present">
+        <span class="stat-value" id="statPaid">0</span>
+        <span class="stat-label">Paid</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item stat-absent">
+        <span class="stat-value" id="statUnpaid">0</span>
+        <span class="stat-label">Unpaid</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-value" id="statAmount">₱0</span>
+        <span class="stat-label">Collected</span>
+      </div>
+    </div>
+    <p class="filter-summary" id="filterSummary">Showing all orders</p>
+  </header>
+
+  <p class="back-link"><a href="index.html">← Back to attendance app</a></p>
+
+  <!-- ============ CONTROLS ============ -->
+  <section class="controls">
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="search" id="searchInput" placeholder="Search by student name..." aria-label="Search by student name">
+      </div>
+      <button id="lockToggleBtn" class="btn-lock locked" type="button">🔒 Locked</button>
+    </div>
+
+    <div class="controls-row filters-row">
+      <select id="gradeFilter" aria-label="Filter by grade">
+        <option value="all">All Grades</option>
+      </select>
+      <select id="sectionFilter" aria-label="Filter by section">
+        <option value="all">All Sections</option>
+      </select>
+      <select id="paidFilter" aria-label="Filter by payment status">
+        <option value="all">All Payment Status</option>
+        <option value="paid">Paid Only</option>
+        <option value="unpaid">Unpaid Only</option>
+      </select>
+      <select id="sizeFilter" aria-label="Filter by size">
+        <option value="all">All Sizes</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- ============ ADD ORDER FORM (only usable when unlocked) ============ -->
+  <section class="order-form-card" id="orderFormCard">
+    <h2 class="order-form-title">Add Order</h2>
+    <form id="orderForm" class="order-form">
+      <div class="order-form-row">
+        <label>Student Name
+          <input type="text" id="fieldName" required placeholder="Surname, First Name">
+        </label>
+      </div>
+
+      <div class="order-form-row order-form-row-2">
+        <label>Grade
+          <select id="fieldGrade">
+            <option value="">Select grade…</option>
+          </select>
+        </label>
+        <label id="sectionFieldWrap" class="hidden">Section
+          <select id="fieldSection">
+            <option value="">Select section…</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="order-form-row">
+        <span class="order-form-section-label">Order Type</span>
+        <div class="choice-group" id="orderTypeGroup">
+          <label class="choice-chip">
+            <input type="radio" name="orderType" value="print_only" checked>
+            <span class="choice-chip-label">Print Only</span>
+            <span class="choice-chip-price">₱75</span>
+          </label>
+          <label class="choice-chip">
+            <input type="radio" name="orderType" value="print_shirt">
+            <span class="choice-chip-label">Print + T-Shirt</span>
+            <span class="choice-chip-price">from ₱150</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="order-form-row hidden" id="sizeChoiceRow">
+        <span class="order-form-section-label">Size</span>
+        <div class="choice-group choice-group-wrap" id="sizeChoiceGroup">
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="XS"><span class="choice-chip-label">XS</span><span class="choice-chip-price">₱150</span></label>
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="S"><span class="choice-chip-label">S</span><span class="choice-chip-price">₱150</span></label>
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="M" checked><span class="choice-chip-label">M</span><span class="choice-chip-price">₱150</span></label>
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="L"><span class="choice-chip-label">L</span><span class="choice-chip-price">₱170</span></label>
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="XL"><span class="choice-chip-label">XL</span><span class="choice-chip-price">₱170</span></label>
+          <label class="choice-chip"><input type="radio" name="sizeChoice" value="2XL"><span class="choice-chip-label">2XL</span><span class="choice-chip-price">₱170</span></label>
+        </div>
+      </div>
+
+      <div class="order-form-row" id="addonChoiceRow">
+        <span class="order-form-section-label">Add-Ons</span>
+        <div class="choice-group choice-group-wrap" id="addonChoiceGroup">
+          <label class="choice-chip"><input type="radio" name="addonChoice" value="none" checked><span class="choice-chip-label">None</span><span class="choice-chip-price">—</span></label>
+          <label class="choice-chip"><input type="radio" name="addonChoice" value="name"><span class="choice-chip-label">With Name</span><span class="choice-chip-price">+₱20</span></label>
+          <label class="choice-chip"><input type="radio" name="addonChoice" value="number"><span class="choice-chip-label">With Number</span><span class="choice-chip-price">+₱30</span></label>
+          <label class="choice-chip"><input type="radio" name="addonChoice" value="both"><span class="choice-chip-label">Name &amp; Number</span><span class="choice-chip-price">+₱50</span></label>
+        </div>
+      </div>
+
+      <div class="order-form-row order-form-row-2">
+        <label>Amount (₱) <span class="order-form-hint">auto-filled, editable</span>
+          <input type="number" id="fieldAmount" min="0" step="1" placeholder="0">
+        </label>
+        <label>Amount Given (₱)
+          <input type="number" id="fieldAmountGiven" min="0" step="1" placeholder="0">
+        </label>
+      </div>
+
+      <div class="change-display" id="changeDisplay">
+        <span class="change-label">Change</span>
+        <span class="change-value" id="changeValue">—</span>
+      </div>
+
+      <div class="order-form-row">
+        <label class="order-form-checkbox">
+          <input type="checkbox" id="fieldPaid">
+          Paid already
+        </label>
+      </div>
+      <button type="submit" class="btn-primary" id="addOrderBtn">+ Add Order</button>
+    </form>
+  </section>
+
+  <!-- ============ ORDER LIST ============ -->
+  <main>
+    <div id="orderListWrap" class="order-list-wrap">
+      <div class="order-list-header">
+        <span>Student</span>
+        <span>Grade / Section</span>
+        <span>Type</span>
+        <span>Size</span>
+        <span>Amount</span>
+        <span>Status</span>
+        <span></span>
+      </div>
+      <div id="orderList" class="order-list"></div>
+      <p id="emptyState" class="empty-state hidden">No orders yet.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ============ PASSWORD MODAL ============ -->
+<div id="passwordModalOverlay" class="password-overlay hidden">
+  <div class="password-modal" id="passwordModal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+    <div class="password-modal-icon" id="passwordModalIcon">🔒</div>
+    <h2 id="passwordModalTitle" class="password-modal-title">Enter Password</h2>
+    <p id="passwordModalMessage" class="password-modal-message">Enter the coach password to add or edit orders.</p>
+    <form id="passwordModalForm" class="password-modal-form" autocomplete="off">
+      <input type="password" id="passwordModalInput" class="password-modal-input" placeholder="Password" autocomplete="new-password" aria-label="Password">
+      <p id="passwordModalError" class="password-modal-error hidden">⚠ Incorrect password. Try again.</p>
+      <div class="password-modal-actions">
+        <button type="button" id="passwordModalCancelBtn" class="btn-secondary">Cancel</button>
+        <button type="submit" id="passwordModalOkBtn" class="btn-primary">Unlock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseClient = window.supabase.createClient(
+    "https://gjiybqgdczhlafkobfxa.supabase.co",
+    "sb_publishable_xGqqLQ5qdmlygF98Dfa8bw_7EaYq5Jx"
+  );
+</script>
+<script src="tshirts.js"></script>
+</body>
+</html>
